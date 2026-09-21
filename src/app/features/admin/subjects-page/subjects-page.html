@@ -1,0 +1,87 @@
+<main class="mx-auto flex max-w-[880px] flex-col gap-6 px-4 py-10">
+  <h1 class="font-serif text-2xl text-ink">Área administrativa</h1>
+  <app-admin-nav />
+  <form class="flex flex-wrap items-end gap-3" (submit)="onCreateSubmit(); $event.preventDefault()">
+    <div class="flex-1 space-y-1">
+      <label class="block text-sm text-ink-muted" for="new-subject-name">Nova matéria</label>
+      <input
+        id="new-subject-name"
+        type="text"
+        [formField]="createForm.name"
+        class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink"
+      />
+      @if (createForm.name().touched() && createForm.name().errors().length) {
+        <p class="text-sm text-rate-again" role="alert">{{ createForm.name().errors().at(0)?.message }}</p>
+      }
+    </div>
+    <button type="submit" class="h-[var(--control-height)] rounded-md bg-amber px-4 text-on-amber">Criar</button>
+  </form>
+  @if (errorMessage(); as message) {
+    <p class="text-sm text-rate-again" role="alert" aria-live="assertive">{{ message }}</p>
+  }
+  @if (loading()) {
+    <p class="text-ink-muted">Carregando matérias…</p>
+  } @else if (subjects().length === 0) {
+    <p class="text-ink-muted">Nenhuma matéria cadastrada ainda.</p>
+  } @else {
+    <table class="w-full text-left text-sm">
+      <thead>
+        <tr class="border-b border-line-strong text-ink-muted">
+          <th class="py-2">Nome</th>
+          <th class="py-2">Situação</th>
+          <th class="py-2">Decks</th>
+          <th class="py-2">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (subject of subjects(); track subject.id) {
+          <tr class="border-b border-line-strong">
+            <td class="py-2">
+              @if (editingId() === subject.id) {
+                <form class="flex gap-2" (submit)="onRenameSubmit(subject.id); $event.preventDefault()">
+                  <input
+                    type="text"
+                    [formField]="renameForm.name"
+                    class="h-[var(--control-height)] rounded-md border border-line-strong bg-surface-raised px-2 text-ink"
+                  />
+                  <button type="submit" class="text-sm text-amber underline">Salvar</button>
+                  <button type="button" (click)="onRenameStart(null)" class="text-sm text-ink-muted underline">
+                    Cancelar
+                  </button>
+                </form>
+              } @else {
+                {{ subject.name }}
+              }
+            </td>
+            <td class="py-2">{{ subject.active ? 'Ativa' : 'Desativada' }}</td>
+            <td class="py-2">{{ subject.deckCount }}</td>
+            <td class="py-2">
+              @if (editingId() !== subject.id) {
+                <button type="button" (click)="onRenameStart(subject)" class="text-sm text-ink underline">
+                  Renomear
+                </button>
+              }
+              @if (pendingToggleId() === subject.id) {
+                <span class="ml-3 text-sm text-ink-muted">Confirmar?</span>
+                <button
+                  type="button"
+                  (click)="onToggleActiveConfirm(subject)"
+                  class="ml-1 text-sm text-rate-again underline"
+                >
+                  Sim
+                </button>
+                <button type="button" (click)="onToggleActive(null)" class="ml-1 text-sm text-ink-muted underline">
+                  Não
+                </button>
+              } @else {
+                <button type="button" (click)="onToggleActive(subject.id)" class="ml-3 text-sm text-ink underline">
+                  {{ subject.active ? 'Desativar' : 'Reativar' }}
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</main>

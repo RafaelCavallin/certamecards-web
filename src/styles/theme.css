@@ -1,0 +1,25 @@
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-amber: var(--amber);
+  --color-on-amber: var(--on-amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-focus: var(--focus);
+  --color-rate-again: var(--rate-again);
+  --color-rate-hard: var(--rate-hard);
+  --color-rate-good: var(--rate-good);
+  --color-rate-easy: var(--rate-easy);
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-pill: var(--radius-pill);
+}

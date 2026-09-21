@@ -1,0 +1,49 @@
+<main class="mx-auto flex min-h-dvh max-w-[720px] flex-col justify-center gap-8 px-4 py-12">
+  <div class="space-y-2 text-center">
+    <h1 class="font-serif text-2xl text-ink">Entrar</h1>
+    <p class="text-ink-muted">Continue seus estudos de onde parou.</p>
+  </div>
+  <form class="space-y-4" (submit)="onSubmit(); $event.preventDefault()">
+    <div class="space-y-1">
+      <label class="block text-sm text-ink-muted" for="login-email">E-mail</label>
+      <input
+        id="login-email"
+        type="email"
+        autocomplete="email"
+        [formField]="loginForm.email"
+        class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink"
+      />
+      @if (loginForm.email().touched() && loginForm.email().errors().length) {
+        <p class="text-sm text-rate-again" role="alert">{{ loginForm.email().errors().at(0)?.message }}</p>
+      }
+    </div>
+    <div class="space-y-1">
+      <label class="block text-sm text-ink-muted" for="login-password">Senha</label>
+      <input
+        id="login-password"
+        type="password"
+        autocomplete="current-password"
+        [formField]="loginForm.password"
+        class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink"
+      />
+      @if (loginForm.password().touched() && loginForm.password().errors().length) {
+        <p class="text-sm text-rate-again" role="alert">{{ loginForm.password().errors().at(0)?.message }}</p>
+      }
+    </div>
+    @if (errorMessage(); as message) {
+      <p class="text-sm text-rate-again" role="alert" aria-live="assertive">{{ message }}</p>
+    }
+    <button
+      type="submit"
+      [disabled]="submitting()"
+      class="h-[var(--control-height)] w-full rounded-md bg-amber text-on-amber disabled:opacity-55"
+    >
+      Entrar
+    </button>
+  </form>
+  <a class="text-center text-sm text-ink-muted underline" [href]="googleAuthorizationUrl">Entrar com o Google</a>
+  <div class="flex justify-between text-sm">
+    <a routerLink="/esqueci-senha" class="text-ink-muted underline">Esqueci minha senha</a>
+    <a routerLink="/cadastrar" class="text-ink-muted underline">Criar conta</a>
+  </div>
+</main>

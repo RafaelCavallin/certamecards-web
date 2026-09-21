@@ -1,0 +1,16 @@
+<div class="grid grid-cols-4 gap-2 max-[480px]:grid-cols-2" role="group" aria-label="Como foi lembrar a resposta?">
+  @for (option of options; track option.rating) {
+    <button
+      type="button"
+      id="s-rate-{{ option.rating }}"
+      class="flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-1 rounded-md border border-line bg-surface px-2 py-3 text-sm font-medium transition-colors hover:border-line-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+      (click)="onRate(option.rating)"
+    >
+      <span [class]="option.toneClass">{{ option.label }}</span>
+      <span class="flex items-center gap-1 text-xs text-ink-faint">
+        <span class="font-mono">{{ intervalFor(option.rating) }}</span>
+        <app-kbd class="max-[480px]:hidden">{{ option.key }}</app-kbd>
+      </span>
+    </button>
+  }
+</div>

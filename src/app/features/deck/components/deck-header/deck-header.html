@@ -1,0 +1,11 @@
+<header class="flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <p class="text-xs font-semibold tracking-wide text-ink-muted uppercase">{{ subject() }}</p>
+    <h1 class="font-serif text-2xl text-ink">{{ name() }}</h1>
+  </div>
+  <div class="flex gap-2">
+    <button appButton size="sm" type="button" (click)="onEdit()">Editar</button>
+    <button appButton size="sm" type="button" (click)="onResetProgress()">Zerar progresso</button>
+    <button appButton variant="ghost" size="sm" type="button" (click)="onDelete()">Excluir</button>
+  </div>
+</header>

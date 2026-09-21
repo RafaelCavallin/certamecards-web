@@ -1,0 +1,16 @@
+<button appButton variant="ghost" type="button" (click)="onSignOut()">Sair</button>
+<dialog
+  #dialog
+  class="w-full max-w-[420px] rounded-lg border-0 bg-surface-raised p-6 text-ink backdrop:bg-black/50"
+  (cancel)="onCancel()"
+>
+  <h2 class="font-sans text-lg font-semibold text-ink">Avaliações pendentes</h2>
+  <p class="mt-2 text-sm text-ink-muted">
+    Há avaliações que ainda não foram sincronizadas. Aguarde a sincronização ou saia mesmo assim.
+  </p>
+  <div class="mt-6 flex justify-end gap-2">
+    <button appButton variant="ghost" type="button" (click)="onCancel()">Cancelar</button>
+    <button appButton variant="quiet" type="button" (click)="onLeaveAnyway()">Sair mesmo assim</button>
+    <button appButton type="button" (click)="onWait()">Aguardar</button>
+  </div>
+</dialog>

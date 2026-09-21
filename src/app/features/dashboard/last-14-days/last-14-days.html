@@ -1,0 +1,9 @@
+<section class="space-y-4 rounded-md bg-surface p-4" aria-labelledby="last-14-days-title">
+  <h2 id="last-14-days-title" class="font-sans text-lg font-semibold text-ink">Últimos 14 dias</h2>
+  <app-reviews-chart [days]="statsService.last14Days().days" />
+  <app-stats-totals
+    [totalReviews]="statsService.last14Days().totalReviews"
+    [accuracyPercent]="statsService.last14Days().accuracyPercent"
+    [focusMinutes]="statsService.last14Days().focusMinutes"
+  />
+</section>

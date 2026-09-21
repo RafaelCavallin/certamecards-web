@@ -1,0 +1,17 @@
+@if (rows().length === 0) {
+  <p class="py-8 text-center text-sm text-ink-muted">Nenhum cartão encontrado.</p>
+} @else {
+  <cdk-virtual-scroll-viewport [itemSize]="itemSize" class="h-[60vh] min-h-[320px]">
+    <div *cdkVirtualFor="let row of rows(); trackBy: trackById">
+      <app-card-list-item
+        [front]="row.front"
+        [back]="row.back"
+        [source]="row.source"
+        [dueText]="row.dueText"
+        [leech]="row.leech"
+        [suspended]="row.suspended"
+        (open)="onOpen(row.id)"
+      />
+    </div>
+  </cdk-virtual-scroll-viewport>
+}

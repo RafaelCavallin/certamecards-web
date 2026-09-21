@@ -1,0 +1,22 @@
+<dialog
+  #dialog
+  [attr.aria-labelledby]="titleId"
+  class="w-full max-w-[520px] rounded-lg border-0 bg-surface-raised p-0 text-ink backdrop:bg-black/50"
+  (cancel)="onCancel()"
+  (close)="onCancel()"
+>
+  <div class="flex items-center justify-between border-b border-line px-6 py-4">
+    <h2 [id]="titleId" class="font-sans text-lg font-semibold text-ink">{{ title() }}</h2>
+    <button
+      type="button"
+      class="text-ink-muted hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+      (click)="onCancel()"
+      aria-label="Fechar"
+    >
+      ×
+    </button>
+  </div>
+  <div class="p-6">
+    <ng-content />
+  </div>
+</dialog>

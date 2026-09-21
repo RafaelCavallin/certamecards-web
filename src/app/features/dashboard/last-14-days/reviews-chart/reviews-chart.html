@@ -1,0 +1,15 @@
+<div class="flex h-24 items-end gap-1" aria-hidden="true">
+  @for (day of days(); track day.dateKey) {
+    <div
+      class="flex-1 rounded-sm"
+      [class.bg-amber]="isToday(day.dateKey)"
+      [class.bg-line-strong]="!isToday(day.dateKey)"
+      [style.height.%]="heightPercent(day.reviews)"
+    ></div>
+  }
+</div>
+<ul class="sr-only">
+  @for (day of days(); track day.dateKey) {
+    <li>{{ label(day) }}</li>
+  }
+</ul>

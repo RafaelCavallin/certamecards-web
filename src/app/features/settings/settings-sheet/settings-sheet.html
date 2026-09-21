@@ -1,0 +1,50 @@
+<app-sheet [open]="open()" title="Ajustes" (closed)="onCancel()">
+  <form class="space-y-4" (submit)="onSubmit(); $event.preventDefault()">
+    <div class="space-y-1">
+      <label class="block text-sm text-ink-muted" for="settings-display-name">Nome de exibição</label>
+      <input id="settings-display-name" type="text" [formField]="settingsForm.displayName" class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink" />
+    </div>
+    <div class="space-y-1">
+      <label class="block text-sm text-ink-muted" for="settings-exam-date">Data da prova (opcional)</label>
+      <input id="settings-exam-date" type="date" [formField]="settingsForm.examDate" class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink" />
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="space-y-1">
+        <label class="block text-sm text-ink-muted" for="settings-new-per-day">Cartões novos por dia</label>
+        <input id="settings-new-per-day" type="number" [formField]="settingsForm.newPerDay" class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink" />
+      </div>
+      <div class="space-y-1">
+        <label class="block text-sm text-ink-muted" for="settings-reviews-per-day">Revisões por dia</label>
+        <input id="settings-reviews-per-day" type="number" [formField]="settingsForm.reviewsPerDay" class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink" />
+      </div>
+    </div>
+    <div class="space-y-1">
+      <label class="block text-sm text-ink-muted" for="settings-focus-minutes">Bloco de foco (minutos)</label>
+      <input id="settings-focus-minutes" type="number" [formField]="settingsForm.focusMinutes" class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink" />
+      @if (settingsForm.focusMinutes().touched() && settingsForm.focusMinutes().errors().length) {
+        <p class="text-sm text-rate-again" role="alert">{{ settingsForm.focusMinutes().errors().at(0)?.message }}</p>
+      }
+    </div>
+    <div class="space-y-1">
+      <label class="block text-sm text-ink-muted" for="settings-time-zone">Fuso horário</label>
+      <select id="settings-time-zone" [formField]="settingsForm.timeZone" class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink">
+        @for (timeZone of timeZones; track timeZone) {
+          <option [value]="timeZone">{{ timeZone }}</option>
+        }
+      </select>
+    </div>
+    <div class="space-y-1">
+      <span class="block text-sm text-ink-muted" id="settings-theme-label">Aparência</span>
+      <select aria-labelledby="settings-theme-label" [formField]="settingsForm.theme" class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink">
+        <option value="noite">Noite</option>
+        <option value="dia">Dia</option>
+        <option value="auto">Automático</option>
+      </select>
+    </div>
+    <app-offline-notice [online]="connectivity.online()" />
+    <div class="flex gap-2">
+      <button appButton type="submit" [disabled]="!connectivity.online() || submitting()">Salvar</button>
+      <button appButton variant="ghost" type="button" (click)="onCancel()">Cancelar</button>
+    </div>
+  </form>
+</app-sheet>

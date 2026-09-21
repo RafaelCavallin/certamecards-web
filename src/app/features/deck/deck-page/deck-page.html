@@ -1,0 +1,55 @@
+@if (deck(); as currentDeck) {
+  <main class="mx-auto max-w-[720px] space-y-6 px-6 py-12">
+    <app-deck-header
+      [name]="currentDeck.name"
+      [subject]="subjectName()"
+      (edited)="onEditDeck()"
+      (resetProgress)="resetProgressConfirmOpen.set(true)"
+      (deleted)="deleteDeckConfirmOpen.set(true)"
+    />
+    <app-deck-counters [counters]="counters()" />
+    <div class="flex items-center justify-between gap-4">
+      <app-card-search
+        class="flex-1"
+        [query]="query()"
+        [stateFilter]="stateFilter()"
+        (queryChange)="query.set($event)"
+        (stateFilterChange)="stateFilter.set($event)"
+      />
+      <button appButton size="sm" type="button" (click)="onNewCard()">Novo cartão</button>
+    </div>
+    <app-card-list [rows]="rows()" (opened)="onOpenCard($event)" />
+  </main>
+  <app-sheet [open]="editDeckOpen()" title="Editar deck" (closed)="editDeckOpen.set(false)">
+    <app-deck-form
+      [subjects]="subjectsData.active()"
+      [initial]="{ subjectId: currentDeck.subjectId, name: currentDeck.name, description: currentDeck.description ?? '' }"
+      [online]="connectivity.online()"
+      submitLabel="Salvar"
+      (saved)="onSaveDeckEdit($event)"
+    />
+  </app-sheet>
+  <app-card-editor-sheet
+    [deckId]="deckId"
+    [open]="cardSheetOpen()"
+    [cardId]="editingCardId()"
+    [cards]="cards()"
+    (closed)="cardSheetOpen.set(false)"
+  />
+  <app-confirm-dialog
+    [open]="deleteDeckConfirmOpen()"
+    title="Excluir deck"
+    message="Os cartões e o progresso deste deck serão apagados. Essa ação não pode ser desfeita."
+    confirmLabel="Excluir"
+    (confirmed)="onConfirmDeleteDeck()"
+    (canceled)="deleteDeckConfirmOpen.set(false)"
+  />
+  <app-confirm-dialog
+    [open]="resetProgressConfirmOpen()"
+    title="Zerar progresso"
+    message="Todos os cartões deste deck voltam a novo. O conteúdo e o histórico de revisões são mantidos."
+    confirmLabel="Zerar"
+    (confirmed)="onConfirmResetProgress()"
+    (canceled)="resetProgressConfirmOpen.set(false)"
+  />
+}

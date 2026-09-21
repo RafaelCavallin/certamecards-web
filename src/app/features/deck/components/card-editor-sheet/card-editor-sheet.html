@@ -1,0 +1,33 @@
+<app-sheet [open]="open()" [title]="cardId() === null ? 'Novo cartão' : 'Editar cartão'" (closed)="onClose()">
+  @if (open()) {
+    <app-card-form [initial]="initialModel()" [online]="connectivity.online()" (saved)="onSave($event)" />
+  }
+  @if (cardId() !== null) {
+    <div class="mt-6 space-y-3 border-t border-line pt-4">
+      @if (history(); as summary) {
+        <p class="text-sm text-ink-muted">
+          {{ summary.reviews }} revisões · {{ summary.again }} de novo
+          @if (summary.lastReviewedAt) {
+            · última em {{ summary.lastReviewedAt | slice: 0 : 10 }}
+          }
+        </p>
+      }
+      <div class="flex gap-2">
+        <button appButton size="sm" type="button" [disabled]="!connectivity.online()" (click)="onToggleSuspend()">
+          {{ isSuspended() ? 'Reativar' : 'Suspender' }}
+        </button>
+        <button appButton variant="ghost" size="sm" type="button" [disabled]="!connectivity.online()" (click)="onDelete()">
+          Excluir
+        </button>
+      </div>
+    </div>
+  }
+</app-sheet>
+<app-confirm-dialog
+  [open]="deleteConfirmOpen()"
+  title="Excluir cartão"
+  message="Esse cartão e o progresso dele serão apagados. Essa ação não pode ser desfeita."
+  confirmLabel="Excluir"
+  (confirmed)="onConfirmDelete()"
+  (canceled)="deleteConfirmOpen.set(false)"
+/>

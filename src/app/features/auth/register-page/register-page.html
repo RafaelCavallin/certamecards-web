@@ -1,0 +1,66 @@
+<main class="mx-auto flex min-h-dvh max-w-[720px] flex-col justify-center gap-8 px-4 py-12">
+  <div class="space-y-2 text-center">
+    <h1 class="font-serif text-2xl text-ink">Criar conta</h1>
+    <p class="text-ink-muted">Comece a transformar seu material em cartões.</p>
+  </div>
+  <form class="space-y-4" (submit)="onSubmit(); $event.preventDefault()">
+    <div class="space-y-1">
+      <label class="block text-sm text-ink-muted" for="register-display-name">Nome de exibição</label>
+      <input
+        id="register-display-name"
+        type="text"
+        autocomplete="name"
+        [formField]="registerForm.displayName"
+        class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink"
+      />
+      @if (registerForm.displayName().touched() && registerForm.displayName().errors().length) {
+        <p class="text-sm text-rate-again" role="alert">{{ registerForm.displayName().errors().at(0)?.message }}</p>
+      }
+    </div>
+    <div class="space-y-1">
+      <label class="block text-sm text-ink-muted" for="register-email">E-mail</label>
+      <input
+        id="register-email"
+        type="email"
+        autocomplete="email"
+        [formField]="registerForm.email"
+        class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink"
+      />
+      @if (registerForm.email().touched() && registerForm.email().errors().length) {
+        <p class="text-sm text-rate-again" role="alert">{{ registerForm.email().errors().at(0)?.message }}</p>
+      }
+    </div>
+    <div class="space-y-1">
+      <label class="block text-sm text-ink-muted" for="register-password">Senha</label>
+      <input
+        id="register-password"
+        type="password"
+        autocomplete="new-password"
+        [formField]="registerForm.password"
+        class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink"
+      />
+      @if (registerForm.password().touched() && registerForm.password().errors().length) {
+        <p class="text-sm text-rate-again" role="alert">{{ registerForm.password().errors().at(0)?.message }}</p>
+      }
+    </div>
+    <label class="flex items-center gap-2 text-sm text-ink-muted">
+      <input type="checkbox" [formField]="registerForm.acceptedTerms" />
+      Li e aceito os termos de uso e a política de privacidade.
+    </label>
+    @if (registerForm.acceptedTerms().touched() && registerForm.acceptedTerms().errors().length) {
+      <p class="text-sm text-rate-again" role="alert">{{ registerForm.acceptedTerms().errors().at(0)?.message }}</p>
+    }
+    @if (errorMessage(); as message) {
+      <p class="text-sm text-rate-again" role="alert" aria-live="assertive">{{ message }}</p>
+    }
+    <button
+      type="submit"
+      [disabled]="submitting()"
+      class="h-[var(--control-height)] w-full rounded-md bg-amber text-on-amber disabled:opacity-55"
+    >
+      Criar conta
+    </button>
+  </form>
+  <a class="text-center text-sm text-ink-muted underline" [href]="googleAuthorizationUrl">Cadastrar com o Google</a>
+  <a routerLink="/entrar" class="text-center text-sm text-ink-muted underline">Já tenho conta</a>
+</main>

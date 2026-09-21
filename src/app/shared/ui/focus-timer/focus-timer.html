@@ -1,0 +1,12 @@
+<button
+  type="button"
+  class="inline-flex items-center gap-2 rounded-full border border-line px-3 py-1.5 text-sm text-ink-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+  [attr.aria-label]="mode() === 'pause' ? 'Retomar cronômetro' : 'Pausar cronômetro'"
+  (click)="onToggle()"
+>
+  <span class="h-2 w-2 rounded-full" [class]="dotClass()" aria-hidden="true"></span>
+  <span>{{ modeLabel() }}</span>
+  @if (mode() !== 'done') {
+    <span class="font-mono">{{ timeLabel() }}</span>
+  }
+</button>

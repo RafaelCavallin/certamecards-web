@@ -1,0 +1,58 @@
+<main class="mx-auto flex max-w-[880px] flex-col gap-6 px-4 py-10">
+  <h1 class="font-serif text-2xl text-ink">Área administrativa</h1>
+  <app-admin-nav />
+  <form class="flex flex-wrap items-end gap-3" (submit)="onGrantSubmit(); $event.preventDefault()">
+    <div class="flex-1 space-y-1">
+      <label class="block text-sm text-ink-muted" for="grant-admin-email">Conceder papel por e-mail</label>
+      <input
+        id="grant-admin-email"
+        type="email"
+        [formField]="grantForm.email"
+        class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink"
+      />
+      @if (grantForm.email().touched() && grantForm.email().errors().length) {
+        <p class="text-sm text-rate-again" role="alert">{{ grantForm.email().errors().at(0)?.message }}</p>
+      }
+    </div>
+    <button type="submit" class="h-[var(--control-height)] rounded-md bg-amber px-4 text-on-amber">Conceder</button>
+  </form>
+  @if (errorMessage(); as message) {
+    <p class="text-sm text-rate-again" role="alert" aria-live="assertive">{{ message }}</p>
+  }
+  @if (loading()) {
+    <p class="text-ink-muted">Carregando administradores…</p>
+  } @else {
+    <table class="w-full text-left text-sm">
+      <thead>
+        <tr class="border-b border-line-strong text-ink-muted">
+          <th class="py-2">Nome</th>
+          <th class="py-2">E-mail</th>
+          <th class="py-2">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (admin of admins(); track admin.id) {
+          <tr class="border-b border-line-strong">
+            <td class="py-2">{{ admin.displayName }}</td>
+            <td class="py-2">{{ admin.email }}</td>
+            <td class="py-2">
+              @if (pendingRevokeId() === admin.id) {
+                <span class="text-sm text-ink-muted">Retirar o papel?</span>
+                <button type="button" (click)="onRevokeConfirm(admin.id)" class="ml-1 text-sm text-rate-again underline">
+                  Sim
+                </button>
+                <button type="button" (click)="onRevokeCancel()" class="ml-1 text-sm text-ink-muted underline">
+                  Não
+                </button>
+              } @else {
+                <button type="button" (click)="onRevokeRequest(admin.id)" class="text-sm text-ink underline">
+                  Retirar papel
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</main>

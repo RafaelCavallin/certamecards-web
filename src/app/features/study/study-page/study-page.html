@@ -1,0 +1,71 @@
+@switch (phase()) {
+  @case ('loading') {
+    <div class="flex min-h-dvh items-center justify-center bg-bg"></div>
+  }
+  @case ('unavailable') {
+    <main class="mx-auto flex min-h-dvh max-w-[480px] flex-col items-center justify-center gap-4 px-6 text-center">
+      <h1 class="font-serif text-2xl text-ink">Tudo em dia por agora</h1>
+      <p class="text-ink-muted">
+        @if (nextAvailableLabel()) {
+          Os próximos cartões ficam disponíveis em {{ nextAvailableLabel() }}.
+        } @else {
+          Nada para estudar agora.
+        }
+      </p>
+      <button appButton variant="primary" type="button" (click)="onBack()">Voltar ao painel</button>
+    </main>
+  }
+  @case ('summary') {
+    @if (summary(); as summaryData) {
+      <app-session-summary
+        [title]="summaryData.title"
+        [message]="summaryData.message"
+        [reviewed]="summaryData.reviewed"
+        [correct]="summaryData.correct"
+        [minutes]="summaryData.focusMinutes"
+        [showContinue]="summaryData.cardsLeftNow > 0"
+        (back)="onBack()"
+        (continueStudying)="onContinue()"
+      />
+    }
+  }
+  @case ('session') {
+    <div class="flex min-h-dvh flex-col bg-bg px-4 py-6" role="region" aria-label="Sessão de estudo">
+      <div class="mx-auto flex w-full max-w-[var(--measure-card)] flex-wrap items-center justify-between gap-4">
+        <app-session-progress [current]="done()" [total]="total()" />
+        <div class="flex flex-wrap items-center gap-2">
+          <app-focus-timer [seconds]="timerSeconds()" [mode]="timerMode()" (pauseToggle)="onTogglePause()" />
+          <button appButton variant="ghost" size="sm" type="button" id="s-undo" [disabled]="!canUndo()" (click)="store.undo()">
+            Desfazer
+            <app-kbd class="max-[480px]:hidden">Z</app-kbd>
+          </button>
+          <button appButton variant="ghost" size="sm" type="button" id="s-end" (click)="onBack()">
+            Encerrar
+            <app-kbd class="max-[480px]:hidden">Esc</app-kbd>
+          </button>
+        </div>
+      </div>
+      @if (current(); as card) {
+        <div class="mx-auto flex w-full max-w-[var(--measure-card)] flex-1 flex-col justify-center gap-6 py-8">
+          <app-flashcard
+            [front]="card.content.front"
+            [back]="card.content.back"
+            [subject]="subjectName()"
+            [source]="card.content.source"
+            [isNew]="card.isNew"
+            [revealed]="revealed()"
+            (reveal)="store.reveal()"
+          />
+          <div class="min-h-[92px]">
+            @if (revealed()) {
+              <app-rating-bar [intervals]="intervals()" (rate)="onRateChoice($event)" />
+            }
+          </div>
+          <p class="text-center text-sm text-ink-faint">
+            {{ revealed() ? 'Seja honesto: "De novo" se errou ou não lembrou.' : 'Tente responder de cabeça antes de virar.' }}
+          </p>
+        </div>
+      }
+    </div>
+  }
+}

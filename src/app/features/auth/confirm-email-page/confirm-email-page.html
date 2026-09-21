@@ -1,0 +1,42 @@
+<main class="mx-auto flex min-h-dvh max-w-[720px] flex-col justify-center gap-6 px-4 py-12 text-center">
+  @switch (status()) {
+    @case ('confirming') {
+      <h1 class="font-serif text-2xl text-ink">Confirmando seu e-mail…</h1>
+    }
+    @case ('confirmed') {
+      <h1 class="font-serif text-2xl text-ink">E-mail confirmado</h1>
+      <p class="text-ink-muted">Você já pode entrar com seu e-mail e senha.</p>
+      <a routerLink="/entrar" class="text-sm text-ink-muted underline">Entrar</a>
+    }
+    @case ('expired') {
+      <h1 class="font-serif text-2xl text-ink">Esse link expirou</h1>
+      <p class="text-ink-muted">Peça um novo link de confirmação.</p>
+    }
+    @default {
+      <h1 class="font-serif text-2xl text-ink">Confirme seu e-mail</h1>
+      <p class="text-ink-muted">Enviamos um link de confirmação. Abra-o para entrar.</p>
+    }
+  }
+  @if (status() === 'pending' || status() === 'expired' || status() === 'error') {
+    <form class="space-y-3" (submit)="onResend(); $event.preventDefault()">
+      <label class="block text-sm text-ink-muted" for="resend-email">E-mail</label>
+      <input
+        id="resend-email"
+        type="email"
+        autocomplete="email"
+        [formField]="resendForm.email"
+        class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink"
+      />
+      @if (resendForm.email().touched() && resendForm.email().errors().length) {
+        <p class="text-sm text-rate-again" role="alert">{{ resendForm.email().errors().at(0)?.message }}</p>
+      }
+      <button
+        type="submit"
+        [disabled]="resendDisabled()"
+        class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised text-ink disabled:opacity-55"
+      >
+        Reenviar e-mail
+      </button>
+    </form>
+  }
+</main>

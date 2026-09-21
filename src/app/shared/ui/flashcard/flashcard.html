@@ -1,0 +1,32 @@
+<article
+  class="mx-auto flex w-full max-w-[var(--measure-card)] flex-col gap-4 rounded-lg bg-surface-raised p-6 shadow-[var(--shadow-card)]"
+  aria-label="Cartão"
+>
+  <header class="flex items-center justify-between gap-2 text-xs font-semibold tracking-wide text-ink-muted uppercase">
+    <span>
+      {{ subject() }}
+      @if (isNew()) {
+        <span class="text-ink-faint normal-case">· novo</span>
+      }
+      @if (isRelearning()) {
+        <span class="text-ink-faint normal-case">· reaprendendo</span>
+      }
+    </span>
+    @if (source()) {
+      <span class="font-mono text-ink-faint normal-case">{{ source() }}</span>
+    }
+  </header>
+  <p class="text-xl leading-snug whitespace-pre-line text-ink">{{ front() }}</p>
+  @if (revealed()) {
+    <div class="border-t border-line pt-4" aria-live="polite">
+      <p class="text-lg leading-snug whitespace-pre-line text-ink-muted">{{ back() }}</p>
+    </div>
+  } @else {
+    <div class="pt-2">
+      <button appButton variant="primary" type="button" id="s-reveal" class="gap-2" (click)="onRevealClick()">
+        Mostrar resposta
+        <app-kbd class="max-[480px]:hidden">Espaço</app-kbd>
+      </button>
+    </div>
+  }
+</article>

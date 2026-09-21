@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+@import '@fontsource/instrument-sans';
+@import '@fontsource/literata';
+@import '@fontsource/ibm-plex-mono';
+@import './styles/tokens.css';
+@import './styles/theme.css';
+
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}

@@ -1,0 +1,20 @@
+<div class="flex flex-wrap gap-2">
+  <input
+    type="search"
+    placeholder="Buscar em frente, verso e fonte"
+    aria-label="Buscar cartões"
+    [value]="query()"
+    (input)="onQueryInput($event)"
+    class="h-[var(--control-height)] flex-1 rounded-md border border-line-strong bg-surface-raised px-3 text-ink"
+  />
+  <select
+    aria-label="Filtrar por estado"
+    [value]="stateFilter()"
+    (change)="onStateFilterChange($event)"
+    class="h-[var(--control-height)] rounded-md border border-line-strong bg-surface-raised px-3 text-ink"
+  >
+    @for (option of options; track option.value) {
+      <option [value]="option.value">{{ option.label }}</option>
+    }
+  </select>
+</div>

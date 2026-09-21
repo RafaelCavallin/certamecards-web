@@ -1,0 +1,30 @@
+<form class="space-y-4" (submit)="onSubmit(); $event.preventDefault()">
+  <div class="space-y-1">
+    <label class="block text-sm text-ink-muted" for="deck-subject">Matéria</label>
+    <select id="deck-subject" [formField]="deckForm.subjectId" class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink">
+      <option value="" disabled>Escolha uma matéria</option>
+      @for (subject of subjects(); track subject.id) {
+        <option [value]="subject.id">{{ subject.name }}</option>
+      }
+    </select>
+    @if (deckForm.subjectId().touched() && deckForm.subjectId().errors().length) {
+      <p class="text-sm text-rate-again" role="alert">{{ deckForm.subjectId().errors().at(0)?.message }}</p>
+    }
+  </div>
+  <div class="space-y-1">
+    <label class="block text-sm text-ink-muted" for="deck-name">Nome</label>
+    <input id="deck-name" type="text" [formField]="deckForm.name" class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink" />
+    @if (deckForm.name().touched() && deckForm.name().errors().length) {
+      <p class="text-sm text-rate-again" role="alert">{{ deckForm.name().errors().at(0)?.message }}</p>
+    }
+  </div>
+  <div class="space-y-1">
+    <label class="block text-sm text-ink-muted" for="deck-description">Descrição (opcional)</label>
+    <textarea id="deck-description" [formField]="deckForm.description" class="w-full rounded-md border border-line-strong bg-surface-raised px-3 py-2 text-ink"></textarea>
+    @if (deckForm.description().touched() && deckForm.description().errors().length) {
+      <p class="text-sm text-rate-again" role="alert">{{ deckForm.description().errors().at(0)?.message }}</p>
+    }
+  </div>
+  <app-offline-notice [online]="online()" />
+  <button appButton type="submit" [disabled]="!online()">{{ submitLabel() }}</button>
+</form>

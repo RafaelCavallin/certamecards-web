@@ -1,0 +1,196 @@
+[
+  {
+    "scenario": "novo-de-novo",
+    "steps": [
+      {
+        "rating": 1,
+        "reviewedAt": "2026-01-01T00:00:00Z"
+      }
+    ],
+    "expected": {
+      "state": 1,
+      "stability": 0.212,
+      "difficulty": 6.4133,
+      "scheduledDays": 0
+    }
+  },
+  {
+    "scenario": "novo-dificil",
+    "steps": [
+      {
+        "rating": 2,
+        "reviewedAt": "2026-01-01T00:00:00Z"
+      }
+    ],
+    "expected": {
+      "state": 1,
+      "stability": 1.2931,
+      "difficulty": 5.11217071,
+      "scheduledDays": 0
+    }
+  },
+  {
+    "scenario": "novo-bom",
+    "steps": [
+      {
+        "rating": 3,
+        "reviewedAt": "2026-01-01T00:00:00Z"
+      }
+    ],
+    "expected": {
+      "state": 1,
+      "stability": 2.3065,
+      "difficulty": 2.11810397,
+      "scheduledDays": 0
+    }
+  },
+  {
+    "scenario": "novo-facil",
+    "steps": [
+      {
+        "rating": 4,
+        "reviewedAt": "2026-01-01T00:00:00Z"
+      }
+    ],
+    "expected": {
+      "state": 2,
+      "stability": 8.2956,
+      "difficulty": 1.0,
+      "scheduledDays": 8
+    }
+  },
+  {
+    "scenario": "aprendizado-passo1-bom-bom",
+    "steps": [
+      {
+        "rating": 3,
+        "reviewedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "rating": 3,
+        "reviewedAt": "2026-01-01T00:10:00Z"
+      }
+    ],
+    "expected": {
+      "state": 2,
+      "stability": 2.3065,
+      "difficulty": 2.11121424,
+      "scheduledDays": 2
+    }
+  },
+  {
+    "scenario": "revisao-no-prazo-again",
+    "steps": [
+      {
+        "rating": 3,
+        "reviewedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "rating": 3,
+        "reviewedAt": "2026-01-01T00:10:00Z"
+      },
+      {
+        "rating": 1,
+        "reviewedAt": "2026-01-03T00:10:00Z"
+      }
+    ],
+    "expected": {
+      "state": 3,
+      "stability": 0.60770166,
+      "difficulty": 7.39223813,
+      "scheduledDays": 0
+    }
+  },
+  {
+    "scenario": "revisao-no-prazo-hard",
+    "steps": [
+      {
+        "rating": 3,
+        "reviewedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "rating": 3,
+        "reviewedAt": "2026-01-01T00:10:00Z"
+      },
+      {
+        "rating": 2,
+        "reviewedAt": "2026-01-03T00:10:00Z"
+      }
+    ],
+    "expected": {
+      "state": 2,
+      "stability": 7.51735933,
+      "difficulty": 4.74828476,
+      "scheduledDays": 8
+    }
+  },
+  {
+    "scenario": "revisao-no-prazo-good",
+    "steps": [
+      {
+        "rating": 3,
+        "reviewedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "rating": 3,
+        "reviewedAt": "2026-01-01T00:10:00Z"
+      },
+      {
+        "rating": 3,
+        "reviewedAt": "2026-01-03T00:10:00Z"
+      }
+    ],
+    "expected": {
+      "state": 2,
+      "stability": 10.97104826,
+      "difficulty": 2.10433139,
+      "scheduledDays": 11
+    }
+  },
+  {
+    "scenario": "revisao-no-prazo-easy",
+    "steps": [
+      {
+        "rating": 3,
+        "reviewedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "rating": 3,
+        "reviewedAt": "2026-01-01T00:10:00Z"
+      },
+      {
+        "rating": 4,
+        "reviewedAt": "2026-01-03T00:10:00Z"
+      }
+    ],
+    "expected": {
+      "state": 2,
+      "stability": 18.53433244,
+      "difficulty": 1.0,
+      "scheduledDays": 19
+    }
+  },
+  {
+    "scenario": "revisao-atrasada-bom",
+    "steps": [
+      {
+        "rating": 3,
+        "reviewedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "rating": 3,
+        "reviewedAt": "2026-01-01T00:10:00Z"
+      },
+      {
+        "rating": 3,
+        "reviewedAt": "2026-01-13T00:10:00Z"
+      }
+    ],
+    "expected": {
+      "state": 2,
+      "stability": 27.09739137,
+      "difficulty": 2.10433139,
+      "scheduledDays": 27
+    }
+  }
+]

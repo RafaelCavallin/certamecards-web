@@ -1,0 +1,16 @@
+<div class="flex min-w-0 flex-col gap-1">
+  <div class="flex items-baseline gap-2 text-sm">
+    <span class="truncate font-medium text-ink">{{ label() }}</span>
+    <span class="font-mono text-ink-faint">{{ current() }} / {{ total() }}</span>
+  </div>
+  <div
+    class="h-1 w-full overflow-hidden rounded-full bg-line"
+    role="progressbar"
+    [attr.aria-valuemin]="0"
+    [attr.aria-valuemax]="total()"
+    [attr.aria-valuenow]="current()"
+    aria-label="Progresso da sessão"
+  >
+    <div class="h-full bg-amber transition-[width]" [style.width.%]="percent()"></div>
+  </div>
+</div>

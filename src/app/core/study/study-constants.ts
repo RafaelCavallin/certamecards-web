@@ -1,0 +1,9 @@
+export const STUDY_DAY_CUTOFF_HOUR = 4;
+export const AHEAD_OF_SCHEDULE_WINDOW_MINUTES = 20;
+export const REVIEWS_PER_NEW_CARD = 4;
+export const UNDO_STACK_LIMIT = 30;
+export const DEFAULT_FOCUS_MINUTES = 25;
+export const DEFAULT_REVIEWS_PER_DAY = 9999;
+export const DEFAULT_TIME_ZONE = 'America/Sao_Paulo';
+export const LEECH_LAPSE_THRESHOLD = 8;
+export const NEXT_CARD_POLL_MS = 30_000;

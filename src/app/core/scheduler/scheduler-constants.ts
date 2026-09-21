@@ -1,0 +1,13 @@
+export const FSRS_REQUEST_RETENTION = 0.9;
+export const FSRS_MAXIMUM_INTERVAL = 36500;
+export const FSRS_ENABLE_FUZZ = true;
+export const FSRS_ENABLE_SHORT_TERM = true;
+export const FSRS_LEARNING_STEPS = ['1m', '10m'] as const;
+export const FSRS_RELEARNING_STEPS = ['10m'] as const;
+export const MINUTE_MS = 60_000;
+export const HOUR_MS = 3_600_000;
+export const DAY_MS = 86_400_000;
+export const DAYS_PER_MONTH = 30;
+export const DAYS_PER_YEAR = 365;
+export const DAYS_PER_YEAR_TENTH = 36.5;
+export const MONTH_THRESHOLD_DAYS = 31;

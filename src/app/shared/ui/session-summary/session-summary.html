@@ -1,0 +1,26 @@
+<main class="mx-auto flex max-w-[480px] flex-col gap-6 px-6 py-16 text-center">
+  <div class="space-y-2">
+    <h1 class="font-serif text-3xl text-ink">{{ title() }}</h1>
+    <p class="text-ink-muted">{{ message() }}</p>
+  </div>
+  <dl class="grid grid-cols-2 gap-4 rounded-md bg-surface p-6 text-left">
+    <div>
+      <dt class="text-xs font-semibold tracking-wide text-ink-faint uppercase">Avaliações</dt>
+      <dd class="font-mono text-2xl text-ink">{{ reviewed() }}</dd>
+    </div>
+    <div>
+      <dt class="text-xs font-semibold tracking-wide text-ink-faint uppercase">Acerto</dt>
+      <dd class="font-mono text-2xl text-rate-good">{{ accuracyPercent() }}%</dd>
+    </div>
+    <div>
+      <dt class="text-xs font-semibold tracking-wide text-ink-faint uppercase">Minutos de foco</dt>
+      <dd class="font-mono text-2xl text-ink">{{ minutes() }}</dd>
+    </div>
+  </dl>
+  <div class="flex flex-col gap-2">
+    <button appButton variant="primary" type="button" (click)="onBack()">Voltar ao painel</button>
+    @if (showContinue()) {
+      <button appButton type="button" (click)="onContinue()">Continuar estudando</button>
+    }
+  </div>
+</main>

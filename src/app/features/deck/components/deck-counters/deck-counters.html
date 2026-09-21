@@ -1,0 +1,26 @@
+<div class="grid grid-cols-3 gap-2 text-sm text-ink-muted sm:grid-cols-6">
+  <div role="group" [attr.aria-label]="'Total: ' + counters().total">
+    <span class="block">Total</span>
+    <span class="block font-mono font-medium text-ink">{{ counters().total }}</span>
+  </div>
+  <div role="group" [attr.aria-label]="'Novos: ' + counters().fresh">
+    <span class="block">Novos</span>
+    <span class="block font-mono font-medium text-ink">{{ counters().fresh }}</span>
+  </div>
+  <div role="group" [attr.aria-label]="'Aprendendo: ' + counters().learning">
+    <span class="block">Aprendendo</span>
+    <span class="block font-mono font-medium text-ink">{{ counters().learning }}</span>
+  </div>
+  <div role="group" [attr.aria-label]="'Em revisão: ' + counters().review">
+    <span class="block">Em revisão</span>
+    <span class="block font-mono font-medium text-ink">{{ counters().review }}</span>
+  </div>
+  <div role="group" [attr.aria-label]="'Suspensos: ' + counters().suspended">
+    <span class="block">Suspensos</span>
+    <span class="block font-mono font-medium text-ink">{{ counters().suspended }}</span>
+  </div>
+  <div role="group" [attr.aria-label]="'Para hoje: ' + counters().dueToday">
+    <span class="block">Para hoje</span>
+    <span class="block font-mono font-medium" [class.text-amber]="counters().dueToday > 0">{{ counters().dueToday }}</span>
+  </div>
+</div>

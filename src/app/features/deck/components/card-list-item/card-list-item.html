@@ -1,0 +1,15 @@
+<button
+  type="button"
+  class="flex w-full items-center gap-4 rounded-md px-4 py-3 text-left hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+  [class.opacity-55]="suspended()"
+  (click)="onOpen()"
+>
+  <div class="min-w-0 flex-1">
+    <p class="truncate font-serif text-base text-ink">{{ front() }}</p>
+    <p class="truncate text-sm text-ink-muted">{{ source() ? source() + ' · ' : '' }}{{ back() }}</p>
+  </div>
+  @if (leech()) {
+    <app-tag>Problemático</app-tag>
+  }
+  <span class="font-mono text-sm text-ink-muted" [class.text-amber]="dueText() === 'hoje'">{{ dueText() }}</span>
+</button>
