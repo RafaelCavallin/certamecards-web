@@ -4,6 +4,7 @@ import type { CardState } from '../api/card-state.model';
 import type { ReviewLogRow } from '../db/local-db.model';
 import { fromFsrsCard, toFsrsCard, withoutTransientFields } from './card-state-conversion';
 import { formatInterval } from './format-interval';
+import { seedStateFrom } from './seed-state';
 import { compareReviewLogs } from './review-log-order';
 import {
   FSRS_ENABLE_FUZZ,
@@ -66,6 +67,10 @@ export class SchedulerService {
       reviewCount += 1;
       if (log.kind === 'reset') {
         state = null;
+        continue;
+      }
+      if (log.kind === 'content_update' || log.kind === 'duplicate') {
+        state = seedStateFrom(log, state, reviewCount);
         continue;
       }
       const rating = log.rating as Rating;

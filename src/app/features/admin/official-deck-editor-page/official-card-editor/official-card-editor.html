@@ -1,0 +1,26 @@
+<app-sheet [open]="open()" [title]="card() === null ? 'Novo cartão oficial' : 'Editar cartão oficial'" (closed)="closed.emit()">
+  @if (open()) {
+    <div class="space-y-4">
+      @if (needsImpact()) {
+        <app-card-change-impact
+          [subscribers]="subscribers()"
+          [kind]="choice().kind"
+          [note]="choice().note"
+          [errorMessage]="impactMessage()"
+          (kindChange)="choice.set({ kind: $event, note: choice().note })"
+          (noteChange)="choice.set({ kind: choice().kind, note: $event })"
+        />
+      }
+      <app-card-form
+        [initial]="initial()"
+        [online]="online()"
+        [keepOnSave]="true"
+        [submitLabel]="card() === null ? 'Salvar e adicionar outro' : 'Salvar'"
+        (saved)="onSaved($event)"
+      />
+      @if (errorMessage(); as message) {
+        <p class="text-sm text-rate-again" role="alert">{{ message }}</p>
+      }
+    </div>
+  }
+</app-sheet>

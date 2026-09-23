@@ -12,7 +12,7 @@ import { DeckPage } from './deck-page';
 
 type DeckPageFixture = ReturnType<typeof TestBed.createComponent<DeckPage>>;
 const DECK: Deck = {
-  id: 'd1', subjectId: 's1', name: 'CF/88', description: null, origin: 'own', originRef: null,
+  id: 'd1', subjectId: 's1', name: 'CF/88', description: null, origin: 'own', originRef: null, originLabel: null, officialStatus: null, cardCount: 0, contentUpdatedAt: null,
   createdAt: '2026-09-01T00:00:00Z', updatedAt: '2026-09-01T00:00:00Z', deletedAt: null, version: 1, changeSeq: 1,
 };
 function dialogByTitle(fixture: DeckPageFixture, title: string): HTMLElement {

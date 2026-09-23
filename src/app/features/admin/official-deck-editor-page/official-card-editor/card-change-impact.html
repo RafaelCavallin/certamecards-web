@@ -1,0 +1,23 @@
+<fieldset class="space-y-3 rounded-md bg-surface p-4">
+  <legend class="px-1 text-sm font-semibold text-ink">Esta edição atinge {{ subscribers() }} {{ subscribers() === 1 ? 'inscrito' : 'inscritos' }}</legend>
+  <label class="block">
+    <input type="radio" name="change-kind" [checked]="kind() === 'correction'" (change)="kindChange.emit('correction')" />
+    <span class="ml-2 text-ink">Correção</span>
+    <span class="block pl-6 text-sm text-ink-muted">Ajuste de texto. O agendamento de quem estuda não muda.</span>
+  </label>
+  <label class="block">
+    <input type="radio" name="change-kind" [checked]="kind() === 'content'" (change)="kindChange.emit('content')" />
+    <span class="ml-2 text-ink">Alteração de conteúdo</span>
+    <span class="block pl-6 text-sm text-ink-muted">O sentido mudou. Os inscritos voltam a reaprender o cartão e veem a sua nota.</span>
+  </label>
+  @if (kind() === 'content') {
+    <div class="space-y-1">
+      <label class="block text-sm text-ink-muted" for="change-note">O que mudou (aparece para os inscritos)</label>
+      <textarea id="change-note" rows="2" [value]="note()" (input)="onNote($event)" class="w-full rounded-md border border-line-strong bg-surface-raised px-3 py-2 text-ink"></textarea>
+      <p class="text-xs text-ink-muted">{{ note().length }}/{{ noteMaxLength }}</p>
+    </div>
+  }
+  @if (errorMessage(); as message) {
+    <p class="text-sm text-rate-again" role="alert">{{ message }}</p>
+  }
+</fieldset>

@@ -67,3 +67,26 @@ it('TU — outras teclas não disparam nenhum atalho', () => {
   expect(spies.rate).not.toHaveBeenCalled();
   expect(spies.reveal).not.toHaveBeenCalled();
 });
+
+it('TU — Enter e Espaço com foco em um botão ativam o botão e não viram atalho', () => {
+  const spies = someHandlers(false);
+  const button = document.createElement('button');
+  document.body.append(button);
+  for (const key of ['Enter', ' ']) {
+    const event = aKeydown(key);
+    Object.defineProperty(event, 'target', { value: button });
+    dispatchStudyShortcut(event, spies.handlers);
+    expect(event.defaultPrevented).toBe(false);
+  }
+  expect(spies.reveal).not.toHaveBeenCalled();
+  button.remove();
+});
+
+it('TU — números e Esc continuam valendo com foco em um botão', () => {
+  const spies = someHandlers(true);
+  const button = document.createElement('button');
+  const event = aKeydown('4');
+  Object.defineProperty(event, 'target', { value: button });
+  dispatchStudyShortcut(event, spies.handlers);
+  expect(spies.rate).toHaveBeenCalledWith(4);
+});

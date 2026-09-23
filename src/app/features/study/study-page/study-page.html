@@ -35,7 +35,7 @@
         <app-session-progress [current]="done()" [total]="total()" />
         <div class="flex flex-wrap items-center gap-2">
           <app-focus-timer [seconds]="timerSeconds()" [mode]="timerMode()" (pauseToggle)="onTogglePause()" />
-          <button appButton variant="ghost" size="sm" type="button" id="s-undo" [disabled]="!canUndo()" (click)="store.undo()">
+          <button appButton variant="ghost" size="sm" type="button" id="s-undo" [disabled]="!store.canUndo()" (click)="store.undo()">
             Desfazer
             <app-kbd class="max-[480px]:hidden">Z</app-kbd>
           </button>
@@ -54,12 +54,16 @@
             [source]="card.content.source"
             [isNew]="card.isNew"
             [revealed]="revealed()"
+            [notice]="noticeOf(card.state)"
             (reveal)="store.reveal()"
           />
           <div class="min-h-[92px]">
             @if (revealed()) {
               <app-rating-bar [intervals]="intervals()" (rate)="onRateChoice($event)" />
             }
+          </div>
+          <div class="flex items-center justify-center gap-2">
+            <app-study-error-report [cardId]="card.ref.cardId" />
           </div>
           <p class="text-center text-sm text-ink-faint">
             {{ revealed() ? 'Seja honesto: "De novo" se errou ou não lembrou.' : 'Tente responder de cabeça antes de virar.' }}

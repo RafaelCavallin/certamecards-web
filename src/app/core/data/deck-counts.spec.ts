@@ -7,7 +7,7 @@ import { computeDeckCounts } from './deck-counts';
 const NOW = new Date('2026-09-17T12:00:00Z');
 function aDeck(overrides: Partial<Deck> = {}): Deck {
   return {
-    id: 'd1', subjectId: 's1', name: 'CF/88', description: null, origin: 'own', originRef: null,
+    id: 'd1', subjectId: 's1', name: 'CF/88', description: null, origin: 'own', originRef: null, originLabel: null, officialStatus: null, cardCount: 0, contentUpdatedAt: null,
     createdAt: '2026-09-01T00:00:00Z', updatedAt: '2026-09-01T00:00:00Z', deletedAt: null, version: 1,
     changeSeq: 1, ...overrides,
   };
@@ -23,7 +23,7 @@ function aState(overrides: Partial<CardState> = {}): CardState {
   return {
     cardId: 'c1', state: 2, stability: 4, difficulty: 5, due: '2026-09-17T00:00:00Z',
     lastReview: '2026-09-10T00:00:00Z', reps: 3, lapses: 0, learningSteps: 0, scheduledDays: 7,
-    reviewCount: 3, suspended: false, changeSeq: 1, ...overrides,
+    reviewCount: 3, suspended: false, contentUpdateNote: null, contentUpdatedAt: null, changeSeq: 1, ...overrides,
   };
 }
 

@@ -1,0 +1,29 @@
+<div class="space-y-2">
+  <div class="flex flex-wrap gap-2">
+    @for (key of available(); track key) {
+      <button
+        appButton
+        [variant]="key === 'publish' ? 'primary' : 'quiet'"
+        size="sm"
+        type="button"
+        [disabled]="!online()"
+        (click)="pending.set(key)"
+      >
+        {{ configs[key].label }}
+      </button>
+    }
+  </div>
+  @if (errorMessage(); as message) {
+    <p class="text-sm text-rate-again" role="alert">{{ message }}</p>
+  }
+</div>
+@if (pending(); as key) {
+  <app-confirm-dialog
+    [open]="true"
+    [title]="configs[key].label"
+    [message]="configs[key].message"
+    [confirmLabel]="configs[key].label"
+    (confirmed)="onConfirm(key)"
+    (canceled)="pending.set(null)"
+  />
+}

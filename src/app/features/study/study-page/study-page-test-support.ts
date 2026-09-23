@@ -13,7 +13,7 @@ import { StudyPage } from './study-page';
 
 export function aDeck(): Deck {
   return {
-    id: 'd1', subjectId: 's1', name: 'Deck', description: null, origin: 'own', originRef: null,
+    id: 'd1', subjectId: 's1', name: 'Deck', description: null, origin: 'own', originRef: null, originLabel: null, officialStatus: null, cardCount: 0, contentUpdatedAt: null,
     createdAt: '2026-09-01T00:00:00Z', updatedAt: '2026-09-01T00:00:00Z', deletedAt: null, version: 1, changeSeq: 1,
   };
 }
@@ -27,7 +27,7 @@ export function aState(cardId: string): CardState {
   return {
     cardId, state: CARD_STATE_REVIEW, stability: 4, difficulty: 5, due: '2026-09-18T08:00:00Z',
     lastReview: '2026-09-10T00:00:00Z', reps: 3, lapses: 0, learningSteps: 0, scheduledDays: 7,
-    reviewCount: 3, suspended: false, changeSeq: 1,
+    reviewCount: 3, suspended: false, contentUpdateNote: null, contentUpdatedAt: null, changeSeq: 1,
   };
 }
 export async function setupStudyPage(seedCards: boolean): Promise<{

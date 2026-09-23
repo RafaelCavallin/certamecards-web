@@ -17,7 +17,7 @@ function aDeck(overrides: Partial<Deck> = {}): Deck {
     name: 'CF/88',
     description: null,
     origin: 'own',
-    originRef: null,
+    originRef: null, originLabel: null, officialStatus: null, cardCount: 0, contentUpdatedAt: null,
     createdAt: '2026-09-17T00:00:00Z',
     updatedAt: '2026-09-17T00:00:00Z',
     deletedAt: null,

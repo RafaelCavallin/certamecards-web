@@ -15,5 +15,7 @@ export interface CardState {
   readonly scheduledDays: number;
   readonly reviewCount: number;
   readonly suspended: boolean;
+  readonly contentUpdateNote: string | null;
+  readonly contentUpdatedAt: string | null;
   readonly changeSeq: number;
 }

@@ -10,4 +10,7 @@ it('TU — mostra os links para matérias e administradores', () => {
   fixture.detectChanges();
   expect(rootText(fixture)).toContain('Matérias');
   expect(rootText(fixture)).toContain('Administradores');
+  expect(rootText(fixture)).toContain('Decks oficiais');
+  expect(rootText(fixture)).toContain('Apontamentos');
+  expect(rootText(fixture)).toContain('Registro');
 });

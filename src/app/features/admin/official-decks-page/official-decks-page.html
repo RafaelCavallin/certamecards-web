@@ -1,0 +1,57 @@
+<main class="mx-auto flex max-w-[880px] flex-col gap-6 px-4 py-10">
+  <h1 class="font-serif text-2xl text-ink">Área administrativa</h1>
+  <app-admin-nav />
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div class="flex w-full flex-wrap gap-3 sm:w-auto">
+      <div class="w-full space-y-1 sm:w-auto">
+        <label class="block text-sm text-ink-muted" for="filter-status">Situação</label>
+        <select
+          id="filter-status"
+          #statusSelect
+          class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink"
+          (change)="onStatus(statusSelect.value)"
+        >
+          <option value="">Todas</option>
+          @for (item of statuses; track item) {
+            <option [value]="item" [selected]="status() === item">{{ statusLabels[item] }}</option>
+          }
+        </select>
+      </div>
+      <div class="w-full space-y-1 sm:w-auto">
+        <label class="block text-sm text-ink-muted" for="filter-subject">Matéria</label>
+        <select
+          id="filter-subject"
+          #subjectSelect
+          class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink"
+          (change)="onSubject(subjectSelect.value)"
+        >
+          <option value="">Todas</option>
+          @for (subject of subjects(); track subject.id) {
+            <option [value]="subject.id" [selected]="subjectId() === subject.id">
+              {{ subject.name }}
+            </option>
+          }
+        </select>
+      </div>
+    </div>
+    <button appButton variant="primary" type="button" [disabled]="!online()" (click)="onNew()">Novo deck</button>
+  </div>
+  @if (!online()) {
+    <app-offline-notice [online]="false" />
+  } @else if (failed()) {
+    <p class="text-rate-again" role="alert">Não foi possível carregar os decks oficiais.</p>
+    <button appButton type="button" (click)="load()">Tentar de novo</button>
+  } @else if (result(); as current) {
+    @if (current.items.length === 0) {
+      <p class="text-ink-muted">Nenhum deck oficial encontrado.</p>
+    } @else {
+      <app-official-decks-table [decks]="current.items" (open)="onOpen($event)" />
+      <nav class="flex justify-between" aria-label="Paginação">
+        <button appButton variant="ghost" type="button" [disabled]="current.page === 0" (click)="onPage(-1)">Anterior</button>
+        <button appButton variant="ghost" type="button" [disabled]="(current.page + 1) * current.size >= current.total" (click)="onPage(1)">Próxima</button>
+      </nav>
+    }
+  } @else {
+    <p class="text-ink-muted" role="status">Carregando decks oficiais…</p>
+  }
+</main>

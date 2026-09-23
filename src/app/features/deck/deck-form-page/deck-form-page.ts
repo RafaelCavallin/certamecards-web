@@ -5,8 +5,8 @@ import { ConnectivityStore } from '../../../core/connectivity/connectivity-store
 import { DecksData } from '../../../core/data/decks-data';
 import { SubjectsData } from '../../../core/data/subjects-data';
 import { generateUuidV7 } from '../../../core/db/uuid7';
-import type { DeckFormModel } from '../forms/deck-form/deck-content-form';
-import { DeckForm } from '../forms/deck-form/deck-form';
+import type { DeckFormModel } from '../../../shared/ui/deck-form/deck-content-form';
+import { DeckForm } from '../../../shared/ui/deck-form/deck-form';
 import { deckFormErrorMessage } from './deck-form-errors';
 
 @Component({

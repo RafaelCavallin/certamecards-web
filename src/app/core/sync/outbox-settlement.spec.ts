@@ -8,7 +8,7 @@ import { seqsToRemove } from './outbox-settlement';
 const STATE: CardState = {
   cardId: 'c1', state: 2, stability: 4, difficulty: 5, due: '2026-09-18T08:00:00Z',
   lastReview: '2026-09-10T00:00:00Z', reps: 3, lapses: 0, learningSteps: 0, scheduledDays: 7,
-  reviewCount: 1, suspended: false, changeSeq: 1,
+  reviewCount: 1, suspended: false, contentUpdateNote: null, contentUpdatedAt: null, changeSeq: 1,
 };
 function aLog(id: string, cardId: string): ReviewLog {
   return {

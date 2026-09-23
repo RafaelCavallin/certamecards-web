@@ -16,6 +16,11 @@ export const routes: Routes = [
     loadChildren: () => import('./features/deck/deck.routes').then((m) => m.DECK_ROUTES),
   },
   {
+    path: 'biblioteca',
+    canActivate: [authGuard, termsGuard],
+    loadComponent: () => import('./features/library/library-page/library-page').then((m) => m.LibraryPage),
+  },
+  {
     path: 'estudar',
     canActivate: [authGuard, termsGuard],
     loadChildren: () => import('./features/study/study.routes').then((m) => m.STUDY_ROUTES),

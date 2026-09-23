@@ -8,13 +8,13 @@ let db: LocalDb;
 
 function emptyPage(overrides: Partial<ChangesPage> = {}): ChangesPage {
   return {
-    subjects: [], decks: [], cards: [], cardStates: [], reviewLogs: [], reviewVoids: [],
+    subjects: [], decks: [], cards: [], cardStates: [], reviewLogs: [], reviewVoids: [], subscriptions: [],
     settings: null, nextCursor: 0, hasMore: false, ...overrides,
   };
 }
 function aDeck(): ChangesPage['decks'][number] {
   return {
-    id: 'd1', subjectId: 's1', name: 'CF/88', description: null, origin: 'own', originRef: null,
+    id: 'd1', subjectId: 's1', name: 'CF/88', description: null, origin: 'own', originRef: null, originLabel: null, officialStatus: null, cardCount: 0, contentUpdatedAt: null,
     createdAt: '2026-09-17T00:00:00Z', updatedAt: '2026-09-17T00:00:00Z', deletedAt: null, version: 1, changeSeq: 1,
   };
 }
@@ -28,7 +28,7 @@ function aCardState(): ChangesPage['cardStates'][number] {
   return {
     cardId: 'c1', state: 2, stability: 4.1, difficulty: 5.2, due: '2026-10-01T00:00:00Z',
     lastReview: '2026-09-17T00:00:00Z', reps: 1, lapses: 0, learningSteps: 0, scheduledDays: 4,
-    reviewCount: 1, suspended: false, changeSeq: 3,
+    reviewCount: 1, suspended: false, contentUpdateNote: null, contentUpdatedAt: null, changeSeq: 3,
   };
 }
 function aReviewLog(): ChangesPage['reviewLogs'][number] {

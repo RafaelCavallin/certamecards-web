@@ -1,0 +1,14 @@
+<button appButton variant="ghost" size="sm" type="button" [disabled]="!online()" (click)="onOpen()">Apontar erro</button>
+@if (!online()) {
+  <span class="text-xs text-ink-faint">Isso precisa de conexão.</span>
+}
+<app-sheet [open]="flow.phase() !== 'closed'" title="Apontar erro" (closed)="onClose()">
+  @if (flow.phase() !== 'closed') {
+    <app-error-report-form
+      [phase]="flow.phase()"
+      [errorMessage]="flow.errorMessage()"
+      (submitted)="onSubmit($event)"
+      (closed)="onClose()"
+    />
+  }
+</app-sheet>

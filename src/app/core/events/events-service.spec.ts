@@ -8,12 +8,13 @@ import { MAX_LOCAL_EVENTS } from './events-constants';
 import { EventsService } from './events-service';
 
 let db: LocalDb;
+const reportHttpStatus = vi.fn();
 
 function setup(submitImpl: ReturnType<typeof vi.fn>, online = true): EventsService {
   TestBed.configureTestingModule({
     providers: [
       { provide: EventsApi, useValue: { submit: submitImpl } },
-      { provide: ConnectivityStore, useValue: { online: () => online, reportHttpStatus: vi.fn() } },
+      { provide: ConnectivityStore, useValue: { online: () => online, reportHttpStatus } },
     ],
   });
   db = TestBed.inject(LocalDb);
@@ -40,6 +41,15 @@ it('TU — flush não chama a API quando está offline', async () => {
   await eventsService.flush();
   expect(submit).not.toHaveBeenCalled();
   expect(await db.events.count()).toBe(1);
+});
+
+it('TU — falha no envio mantém os eventos locais e não marca o app como offline', async () => {
+  const submit = vi.fn().mockRejectedValue(new Error('429'));
+  const eventsService = setup(submit);
+  await eventsService.record('deck_created', {});
+  await eventsService.flush();
+  expect(await db.events.count()).toBe(1);
+  expect(reportHttpStatus).not.toHaveBeenCalled();
 });
 
 it('TU — record descarta os eventos mais antigos acima do limite local', async () => {

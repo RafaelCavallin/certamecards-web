@@ -19,25 +19,29 @@ test.describe('E2E-06 — ações do administrador', () => {
     'requer E2E_ADMIN_EMAIL e E2E_ADMIN_PASSWORD de uma conta já promovida por ADMIN_BOOTSTRAP_EMAIL',
   );
 
-  test('cria matéria duplicada, renomeia, desativa e não retira o próprio papel', async ({ page, candidate }) => {
+  test('cria matéria duplicada, renomeia, desativa e retira o papel de outro administrador', async ({ page, candidate, admin }) => {
     await loginAndReachHome(page, adminEmail ?? '', adminPassword ?? '');
     const renamedName = await createDuplicateThenRenameSubject(page);
     await deactivateSubject(page, renamedName);
-    await attemptRevokeOwnRole(page, adminEmail ?? '');
+    await revokeAnotherAdmin(page, admin.email);
     await loginAndReachHome(page, candidate.email, candidate.password);
     await page.goto('/decks/novo');
     await expect(page.getByLabel('Matéria').getByRole('option', { name: renamedName })).toHaveCount(0);
   });
 });
 async function createDuplicateThenRenameSubject(page: Page): Promise<string> {
+  const originalName = `${SEEDED_SUBJECT_NAME} ${crypto.randomUUID().slice(0, 8)}`;
   await page.goto('/admin/materias');
-  await page.getByLabel('Nova matéria').fill(SEEDED_SUBJECT_NAME);
+  await page.getByLabel('Nova matéria').fill(originalName);
+  await page.getByRole('button', { name: 'Criar' }).click();
+  await expect(page.getByRole('row', { name: new RegExp(originalName) })).toBeVisible();
+  await page.getByLabel('Nova matéria').fill(originalName);
   await page.getByRole('button', { name: 'Criar' }).click();
   await expect(page.getByRole('alert')).toBeVisible();
-  const renamedName = `Direito Constitucional ${crypto.randomUUID().slice(0, 8)}`;
-  await page.getByRole('row', { name: new RegExp(SEEDED_SUBJECT_NAME) }).getByText('Renomear').click();
-  await page.getByRole('row', { name: new RegExp(SEEDED_SUBJECT_NAME) }).locator('input').fill(renamedName);
-  await page.getByRole('button', { name: 'Salvar' }).click();
+  const renamedName = `${originalName} renomeada`;
+  await page.getByRole('row').filter({ hasText: originalName }).getByText('Renomear').click();
+  await page.locator('table input').fill(renamedName);
+  await page.locator('table input').press('Enter');
   await expect(page.getByText(renamedName)).toBeVisible();
   return renamedName;
 }
@@ -46,10 +50,10 @@ async function deactivateSubject(page: Page, name: string): Promise<void> {
   await page.getByText('Sim').click();
   await expect(page.getByRole('row', { name: new RegExp(name) }).getByText('Desativada')).toBeVisible();
 }
-async function attemptRevokeOwnRole(page: Page, adminEmail: string): Promise<void> {
+async function revokeAnotherAdmin(page: Page, otherAdminEmail: string): Promise<void> {
   await page.goto('/admin/administradores');
-  const adminRow = page.getByRole('row', { name: new RegExp(adminEmail) });
-  await adminRow.getByText('Retirar papel').click();
-  await adminRow.getByText('Sim').click();
-  await expect(page.getByRole('alert')).toBeVisible();
+  const otherRow = page.getByRole('row', { name: new RegExp(otherAdminEmail) });
+  await otherRow.getByText('Retirar papel').click();
+  await otherRow.getByText('Sim').click();
+  await expect(page.getByRole('row', { name: new RegExp(otherAdminEmail) })).toHaveCount(0);
 }

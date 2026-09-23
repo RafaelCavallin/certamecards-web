@@ -8,8 +8,17 @@ export interface StudyShortcutHandlers {
   readonly end: () => void;
 }
 const RATING_BY_KEY: Readonly<Record<string, Rating>> = { '1': 1, '2': 2, '3': 3, '4': 4 };
+const TYPING_TARGET_SELECTOR = 'dialog, input, textarea, select';
+const INTERACTIVE_TARGET_SELECTOR = 'button, a[href]';
+function isTypingTarget(target: EventTarget | null): boolean {
+  return target instanceof Element && target.closest(TYPING_TARGET_SELECTOR) !== null;
+}
+function activatesFocusedControl(event: KeyboardEvent): boolean {
+  const activationKey = event.key === ' ' || event.key === 'Enter';
+  return activationKey && event.target instanceof Element && event.target.closest(INTERACTIVE_TARGET_SELECTOR) !== null;
+}
 export function dispatchStudyShortcut(event: KeyboardEvent, handlers: StudyShortcutHandlers): void {
-  if (event.ctrlKey || event.metaKey || event.altKey) {
+  if (event.ctrlKey || event.metaKey || event.altKey || isTypingTarget(event.target)) {
     return;
   }
   if (event.key === 'Escape') {
@@ -22,6 +31,12 @@ export function dispatchStudyShortcut(event: KeyboardEvent, handlers: StudyShort
     handlers.undo();
     return;
   }
+  if (activatesFocusedControl(event)) {
+    return;
+  }
+  dispatchRevealAndRating(event, handlers);
+}
+function dispatchRevealAndRating(event: KeyboardEvent, handlers: StudyShortcutHandlers): void {
   if (!handlers.revealed && (event.key === ' ' || event.key === 'Enter')) {
     event.preventDefault();
     handlers.reveal();

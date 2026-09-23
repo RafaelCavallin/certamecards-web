@@ -10,8 +10,8 @@ import { generateUuidV7 } from '../../../../core/db/uuid7';
 import { Button } from '../../../../shared/ui/button/button';
 import { ConfirmDialog } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
 import { Sheet } from '../../../../shared/ui/sheet/sheet';
-import type { CardFormModel } from '../../forms/card-form/card-content-form';
-import { CardForm } from '../../forms/card-form/card-form';
+import type { CardFormModel } from '../../../../shared/ui/card-form/card-content-form';
+import { CardForm } from '../../../../shared/ui/card-form/card-form';
 import { summarizeCardHistory } from '../../deck-page/card-history-summary';
 
 @Component({

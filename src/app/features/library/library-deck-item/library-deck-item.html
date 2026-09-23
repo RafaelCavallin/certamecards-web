@@ -1,0 +1,21 @@
+<article class="flex flex-wrap items-center gap-4 rounded-md bg-surface px-4 py-3">
+  <div class="min-w-0 flex-1 space-y-1">
+    <p class="text-xs font-semibold tracking-wide text-ink-muted uppercase">{{ deck().subjectName }}</p>
+    <h2 class="text-base font-semibold text-ink">{{ deck().name }}</h2>
+    @if (deck().description) {
+      <p class="text-sm text-ink-muted">{{ deck().description }}</p>
+    }
+    <p class="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+      <app-tag>Oficial</app-tag>
+      @if (deck().subscribed) {
+        <app-tag tone="accent">Inscrito</app-tag>
+      }
+      <span>{{ cardsLabel(deck().cardCount) }} · Atualizado em {{ updatedAt(deck().contentUpdatedAt) }}</span>
+    </p>
+  </div>
+  @if (deck().subscribed) {
+    <button appButton type="button" [attr.aria-label]="'Abrir o deck ' + deck().name" (click)="onOpenDeck()">Abrir deck</button>
+  } @else {
+    <button appButton type="button" [attr.aria-label]="'Ver a prévia de ' + deck().name" (click)="onPreview()">Ver prévia</button>
+  }
+</article>

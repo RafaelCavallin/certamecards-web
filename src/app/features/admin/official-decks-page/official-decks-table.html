@@ -1,0 +1,30 @@
+<div class="overflow-x-auto" role="region" aria-label="Lista de decks oficiais" tabindex="0">
+  <table class="w-full min-w-160 text-left text-sm">
+    <thead>
+      <tr class="border-b border-line-strong text-ink-muted">
+        <th class="py-2 pr-4">Situação</th>
+        <th class="py-2 pr-4">Matéria</th>
+        <th class="py-2 pr-4">Nome</th>
+        <th class="py-2 pr-4">Cartões</th>
+        <th class="py-2 pr-4">Inscritos</th>
+        <th class="py-2 pr-4">Apontamentos</th>
+        <th class="py-2 pr-4">Atualizado</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (deck of decks(); track deck.id) {
+        <tr class="border-b border-line-strong">
+          <td class="py-2 pr-4">{{ statusLabels[deck.status] }}</td>
+          <td class="py-2 pr-4">{{ deck.subjectName }}</td>
+          <td class="py-2 pr-4">
+            <button type="button" class="text-ink underline" (click)="open.emit(deck.id)">{{ deck.name }}</button>
+          </td>
+          <td class="py-2 pr-4">{{ deck.cardCount }}</td>
+          <td class="py-2 pr-4">{{ deck.subscriberCount }}</td>
+          <td class="py-2 pr-4">{{ deck.openReportCount }}</td>
+          <td class="py-2 pr-4">{{ deck.contentUpdatedAt ? formatDate(deck.contentUpdatedAt) : '—' }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

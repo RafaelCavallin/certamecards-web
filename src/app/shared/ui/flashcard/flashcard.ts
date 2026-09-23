@@ -15,6 +15,7 @@ export class Flashcard {
   readonly isNew = input(false);
   readonly isRelearning = input(false);
   readonly revealed = input(false);
+  readonly notice = input<string | null>(null);
 
   readonly reveal = output<void>();
 

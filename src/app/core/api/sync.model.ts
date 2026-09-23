@@ -1,5 +1,6 @@
 import type { Card } from './card.model';
 import type { CardState } from './card-state.model';
+import type { DeckSubscription } from './library.model';
 import type { Deck } from './deck.model';
 import type { ReviewLog, ReviewVoid } from './review-log.model';
 import type { UserSettings } from './settings.model';
@@ -12,13 +13,14 @@ export interface ChangesPage {
   readonly cardStates: readonly CardState[];
   readonly reviewLogs: readonly ReviewLog[];
   readonly reviewVoids: readonly ReviewVoid[];
+  readonly subscriptions: readonly DeckSubscription[];
   readonly settings: UserSettings | null;
   readonly nextCursor: number;
   readonly hasMore: boolean;
 }
 export type ReviewLogPush = Omit<ReviewLog, 'changeSeq'>;
 export type ReviewVoidPush = Omit<ReviewVoid, 'changeSeq'>;
-export type CardStatePush = Omit<CardState, 'suspended' | 'changeSeq'>;
+export type CardStatePush = Omit<CardState, 'suspended' | 'contentUpdateNote' | 'contentUpdatedAt' | 'changeSeq'>;
 export interface ReviewPushRequest {
   readonly deviceId: string;
   readonly reviews: readonly ReviewLogPush[];

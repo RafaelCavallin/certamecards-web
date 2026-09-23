@@ -1,0 +1,44 @@
+<main class="mx-auto flex max-w-[720px] flex-col gap-6 px-6 py-12">
+  <header class="space-y-2">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <h1 class="font-serif text-4xl text-ink">Biblioteca</h1>
+      <button appButton variant="ghost" size="sm" type="button" (click)="onBack()">Voltar ao painel</button>
+    </div>
+    <p class="text-ink-muted">Decks oficiais para se inscrever ou duplicar.</p>
+  </header>
+  @if (store.online()) {
+    <div class="space-y-3">
+      <label class="block text-sm text-ink-muted" for="library-search">Buscar decks</label>
+      <input
+        id="library-search"
+        type="search"
+        autocomplete="off"
+        [formField]="searchForm.term"
+        class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink"
+      />
+      @if (store.subjects().length > 0) {
+        <div class="flex flex-wrap gap-2" role="group" aria-label="Filtrar por matéria">
+          <button type="button" [attr.aria-pressed]="store.subjectId() === null" (click)="store.selectSubject(null)">
+            <app-tag [tone]="store.subjectId() === null ? 'accent' : 'neutral'">Todas</app-tag>
+          </button>
+          @for (subject of store.subjects(); track subject.id) {
+            <button type="button" [attr.aria-pressed]="store.subjectId() === subject.id" (click)="store.selectSubject(subject.id)">
+              <app-tag [tone]="store.subjectId() === subject.id ? 'accent' : 'neutral'">{{ subject.name }}</app-tag>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+  <app-library-results
+    [view]="store.view()"
+    [result]="store.result()"
+    (preview)="onPreview($event)"
+    (openDeck)="onOpenDeck($event)"
+    (pageChange)="store.goToPage($event)"
+    (retry)="store.reload()"
+    (clear)="onClear()"
+    (back)="onBack()"
+  />
+</main>
+<app-deck-preview-sheet [deckId]="previewDeckId()" (closed)="onClosePreview()" (opened)="onOpenDeck($event)" />

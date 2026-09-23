@@ -32,9 +32,11 @@ export class EventsService {
     if (!this.connectivity.online()) {
       return Promise.resolve();
     }
-    this.flushing ??= this.runFlush().finally(() => {
-      this.flushing = null;
-    });
+    this.flushing ??= this.runFlush()
+      .catch(() => undefined)
+      .finally(() => {
+        this.flushing = null;
+      });
     return this.flushing;
   }
 
@@ -43,12 +45,8 @@ export class EventsService {
     if (batch.length === 0) {
       return;
     }
-    try {
-      await this.eventsApi.submit(batch);
-      await this.localDb.events.bulkDelete(batch.map((event) => event.id));
-    } catch {
-      this.connectivity.reportHttpStatus(0);
-    }
+    await this.eventsApi.submit(batch);
+    await this.localDb.events.bulkDelete(batch.map((event) => event.id));
   }
 
   private async trimToLimit(): Promise<void> {

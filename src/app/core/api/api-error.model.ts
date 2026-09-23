@@ -13,6 +13,8 @@ export interface ApiError {
   readonly detail: string;
   readonly fields?: readonly ApiFieldError[];
   readonly retryAfterSeconds?: number;
+  readonly requiredCards?: number;
+  readonly availableCards?: number;
 }
 export function isApiError(value: unknown): value is ApiError {
   return (

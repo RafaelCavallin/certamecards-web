@@ -1,0 +1,48 @@
+<app-sheet [open]="deckId() !== null" [title]="title()" (closed)="closed.emit()">
+  @if (!online()) {
+    <div class="space-y-2">
+      <app-offline-notice [online]="false" />
+      <p class="text-sm text-ink-muted">A prévia só abre com internet.</p>
+    </div>
+  } @else if (loadFailed()) {
+    <p class="text-ink" role="alert">Não foi possível carregar a prévia.</p>
+  } @else if (preview(); as current) {
+    <div class="space-y-4">
+      <p class="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+        <app-tag>Oficial</app-tag>
+        @if (current.deck.subscribed) {
+          <app-tag>Inscrito</app-tag>
+        }
+        <span>{{ current.deck.subjectName }} · {{ cardsLabel(current.deck.cardCount) }}</span>
+      </p>
+      @if (current.deck.description) {
+        <p class="text-sm text-ink-muted">{{ current.deck.description }}</p>
+      }
+      <app-preview-card-list [cards]="current.cards" />
+      @if (errorMessage() && !duplicating()) {
+        <p class="text-sm text-rate-again" role="alert">{{ errorMessage() }}</p>
+      }
+      <div class="flex flex-wrap justify-end gap-2">
+        <button appButton type="button" [disabled]="busy()" (click)="duplicating.set(true)">Duplicar como deck próprio</button>
+        @if (current.deck.subscribed) {
+          <button appButton variant="primary" type="button" (click)="onOpenDeck(current.deck.id)">Abrir deck</button>
+        } @else {
+          <button appButton variant="primary" type="button" [disabled]="busy()" (click)="onSubscribe(current.deck.id)">Inscrever-se</button>
+        }
+      </div>
+    </div>
+    <app-duplicate-deck-dialog
+      [open]="duplicating()"
+      [progressOptions]="texts.progressOptions"
+      [subscriptionOptions]="texts.subscriptionOptions"
+      [notice]="texts.notice"
+      [subscribed]="current.deck.subscribed"
+      [busy]="busy()"
+      [errorMessage]="errorMessage()"
+      (confirmed)="onDuplicate(current.deck.id, $event)"
+      (canceled)="onDuplicateCanceled()"
+    />
+  } @else {
+    <p class="text-ink-muted" role="status">Carregando a prévia…</p>
+  }
+</app-sheet>

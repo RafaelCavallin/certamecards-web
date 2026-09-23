@@ -8,6 +8,13 @@ export const PRODUCT_EVENT_NAMES = [
   'pwa_installed',
   'sync_flushed',
   'client_error',
+  'library_opened',
+  'library_searched',
+  'deck_preview_opened',
+  'deck_subscribed',
+  'deck_unsubscribed',
+  'deck_duplicated',
+  'card_error_reported',
 ] as const;
 export type ProductEventName = (typeof PRODUCT_EVENT_NAMES)[number];
 export interface ProductEvent {

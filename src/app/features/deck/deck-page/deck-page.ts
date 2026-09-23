@@ -13,14 +13,19 @@ import { CardSearch, type CardStateFilter } from '../components/card-search/card
 import { CardList } from '../components/card-list/card-list';
 import { DeckCounters } from '../components/deck-counters/deck-counters';
 import { DeckHeader } from '../components/deck-header/deck-header';
-import { DeckForm } from '../forms/deck-form/deck-form';
-import type { DeckFormModel } from '../forms/deck-form/deck-content-form';
+import { DeckForm } from '../../../shared/ui/deck-form/deck-form';
+import type { DeckFormModel } from '../../../shared/ui/deck-form/deck-content-form';
+import { OfficialCardSheet } from '../components/official-card-sheet/official-card-sheet';
+import { OfficialDeckDialogs } from '../components/official-deck-dialogs/official-deck-dialogs';
+import { deckBadges } from '../../../core/library/deck-badges';
+import { deckActions } from './deck-actions';
+import { saveDeckEdit } from './deck-edit';
 import { computeDeckCardCounters } from './deck-card-counters';
 import { buildCardListRows } from './deck-page-rows';
 
 @Component({
   selector: 'app-deck-page',
-  imports: [DeckHeader, DeckCounters, CardSearch, CardList, Sheet, ConfirmDialog, DeckForm, CardEditorSheet, Button],
+  imports: [OfficialCardSheet, OfficialDeckDialogs, DeckHeader, DeckCounters, CardSearch, CardList, Sheet, ConfirmDialog, DeckForm, CardEditorSheet, Button],
   templateUrl: './deck-page.html',
 })
 export class DeckPage {
@@ -52,11 +57,16 @@ export class DeckPage {
       now: new Date(),
     }),
   );
+  protected readonly actionsOf = deckActions;
+  protected readonly badgesOf = deckBadges;
+  protected readonly cancelSubscriptionOpen = signal(false);
+  protected readonly duplicateOpen = signal(false);
   protected readonly editDeckOpen = signal(false);
   protected readonly deleteDeckConfirmOpen = signal(false);
   protected readonly resetProgressConfirmOpen = signal(false);
   protected readonly cardSheetOpen = signal(false);
   protected readonly editingCardId = signal<string | null>(null);
+  protected readonly editingCard = computed(() => this.cards().find((card) => card.id === this.editingCardId()));
   protected onNewCard(): void {
     this.editingCardId.set(null);
     this.cardSheetOpen.set(true);
@@ -67,20 +77,8 @@ export class DeckPage {
     this.cardSheetOpen.set(true);
   }
 
-  protected onEditDeck(): void {
-    this.editDeckOpen.set(true);
-  }
-
   protected async onSaveDeckEdit(value: DeckFormModel): Promise<void> {
-    const currentDeck = this.deck();
-    if (currentDeck === undefined) {
-      return;
-    }
-    await this.decksData.update(currentDeck.id, currentDeck.version, {
-      subjectId: value.subjectId,
-      name: value.name,
-      description: value.description === '' ? null : value.description,
-    });
+    await saveDeckEdit(this.decksData, this.deck(), value);
     this.editDeckOpen.set(false);
   }
 

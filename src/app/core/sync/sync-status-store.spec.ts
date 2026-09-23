@@ -36,7 +36,7 @@ it('TU — status é "pending" quando há itens na outbox', async () => {
     state: {
       cardId: 'c1', state: CARD_STATE_REVIEW, stability: 1, difficulty: 1, due: '2026-09-18T00:00:00Z',
       lastReview: null, reps: 1, lapses: 0, learningSteps: 0, scheduledDays: 0, reviewCount: 1,
-      suspended: false, changeSeq: 0,
+      suspended: false, contentUpdateNote: null, contentUpdatedAt: null, changeSeq: 0,
     },
   });
   await waitFor(() => store.pendingCount() === 1);

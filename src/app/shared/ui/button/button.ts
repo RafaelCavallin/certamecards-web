@@ -9,7 +9,7 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
 };
 const SIZE_CLASSES: Record<ButtonSize, string> = {
   md: 'h-[var(--control-height)] px-4',
-  sm: 'h-9 px-3',
+  sm: 'h-11 px-3 sm:h-9',
 };
 @Directive({
   selector: 'button[appButton]',

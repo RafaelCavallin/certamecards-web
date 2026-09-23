@@ -12,7 +12,8 @@ import { Kbd } from '../../../shared/ui/kbd/kbd';
 import { RatingBar } from '../../../shared/ui/rating-bar/rating-bar';
 import { SessionProgress } from '../../../shared/ui/session-progress/session-progress';
 import { SessionSummary } from '../../../shared/ui/session-summary/session-summary';
-import { focusTimerMode, intervalLabels } from '../study-page-view';
+import { StudyErrorReport } from '../study-error-report/study-error-report';
+import { focusTimerMode, intervalLabels, noticeOf } from '../study-page-view';
 import { buildSummaryView, runStart } from '../study-page-session';
 import { dispatchStudyShortcut } from '../study-shortcuts';
 import type { StudyPhase, SummaryView } from '../study-page.model';
@@ -20,7 +21,7 @@ import type { StudyPhase, SummaryView } from '../study-page.model';
 const SECOND_MS = 1000;
 @Component({
   selector: 'app-study-page',
-  imports: [Button, Flashcard, FocusTimer, Kbd, RatingBar, SessionProgress, SessionSummary],
+  imports: [Button, Flashcard, StudyErrorReport, FocusTimer, Kbd, RatingBar, SessionProgress, SessionSummary],
   templateUrl: './study-page.html',
 })
 export class StudyPage {
@@ -30,10 +31,10 @@ export class StudyPage {
   private readonly settingsData = inject(SettingsData);
   private readonly subjectsData = inject(SubjectsData);
   protected readonly current = this.store.current;
+  protected readonly noticeOf = noticeOf;
   protected readonly revealed = this.store.revealed;
   protected readonly done = this.store.done;
   protected readonly total = this.store.total;
-  protected readonly canUndo = this.store.canUndo;
   protected readonly phase = signal<StudyPhase>('loading');
   protected readonly nextAvailableAt = signal<Date | null>(null);
   protected readonly nextAvailableLabel = computed(() => {

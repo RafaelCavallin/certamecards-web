@@ -1,3 +1,5 @@
+import type { CardState } from '../../core/api/card-state.model';
+import { contentUpdateNotice } from '../../core/library/content-update-notice';
 import type { PreviewByRating } from '../../core/scheduler/scheduler.model';
 import type { FocusTimerMode } from '../../shared/ui/focus-timer/focus-timer';
 
@@ -13,4 +15,7 @@ export function focusTimerMode(remainingSeconds: number, paused: boolean): Focus
     return 'done';
   }
   return paused ? 'pause' : 'focus';
+}
+export function noticeOf(state: CardState | null): string | null {
+  return state === null ? null : contentUpdateNotice(state);
 }

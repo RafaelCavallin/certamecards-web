@@ -3,7 +3,12 @@
     <app-deck-header
       [name]="currentDeck.name"
       [subject]="subjectName()"
-      (edited)="onEditDeck()"
+      [actions]="actionsOf(currentDeck)"
+      [badges]="badgesOf(currentDeck)"
+      [online]="connectivity.online()"
+      (edited)="editDeckOpen.set(true)"
+      (subscriptionCanceled)="cancelSubscriptionOpen.set(true)"
+      (duplicated)="duplicateOpen.set(true)"
       (resetProgress)="resetProgressConfirmOpen.set(true)"
       (deleted)="deleteDeckConfirmOpen.set(true)"
     />
@@ -16,7 +21,9 @@
         (queryChange)="query.set($event)"
         (stateFilterChange)="stateFilter.set($event)"
       />
-      <button appButton size="sm" type="button" (click)="onNewCard()">Novo cartão</button>
+      @if (actionsOf(currentDeck).createCard) {
+        <button appButton size="sm" type="button" (click)="onNewCard()">Novo cartão</button>
+      }
     </div>
     <app-card-list [rows]="rows()" (opened)="onOpenCard($event)" />
   </main>
@@ -29,13 +36,23 @@
       (saved)="onSaveDeckEdit($event)"
     />
   </app-sheet>
-  <app-card-editor-sheet
-    [deckId]="deckId"
-    [open]="cardSheetOpen()"
-    [cardId]="editingCardId()"
-    [cards]="cards()"
-    (closed)="cardSheetOpen.set(false)"
-  />
+  @if (actionsOf(currentDeck).editCard) {
+    <app-card-editor-sheet
+      [deckId]="deckId"
+      [open]="cardSheetOpen()"
+      [cardId]="editingCardId()"
+      [cards]="cards()"
+      (closed)="cardSheetOpen.set(false)"
+    />
+  } @else {
+    <app-official-card-sheet [open]="cardSheetOpen()" [card]="editingCard()" (closed)="cardSheetOpen.set(false)" />
+    <app-official-deck-dialogs
+      [deckId]="deckId"
+      [cancelOpen]="cancelSubscriptionOpen()"
+      [duplicateOpen]="duplicateOpen()"
+      (dismissed)="cancelSubscriptionOpen.set(false); duplicateOpen.set(false)"
+    />
+  }
   <app-confirm-dialog
     [open]="deleteDeckConfirmOpen()"
     title="Excluir deck"

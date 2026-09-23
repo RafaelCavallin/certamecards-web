@@ -16,6 +16,9 @@
       <span class="font-mono text-ink-faint normal-case">{{ source() }}</span>
     }
   </header>
+  @if (notice()) {
+    <p class="rounded-sm bg-surface px-3 py-2 text-sm text-ink-muted" role="note">{{ notice() }}</p>
+  }
   <p class="text-xl leading-snug whitespace-pre-line text-ink">{{ front() }}</p>
   @if (revealed()) {
     <div class="border-t border-line pt-4" aria-live="polite">

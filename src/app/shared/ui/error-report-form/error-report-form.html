@@ -1,0 +1,47 @@
+@switch (phase()) {
+  @case ('already') {
+    <div class="space-y-4">
+      <p class="text-ink" role="status">Você já apontou um erro neste cartão. Vamos analisar.</p>
+      <div class="flex justify-end"><button appButton type="button" (click)="closed.emit()">Fechar</button></div>
+    </div>
+  }
+  @case ('sent') {
+    <div class="space-y-4">
+      <p class="text-ink" role="status">Obrigado. Vamos analisar o cartão.</p>
+      <div class="flex justify-end"><button appButton type="button" (click)="closed.emit()">Fechar</button></div>
+    </div>
+  }
+  @default {
+    <form class="space-y-4" (submit)="$event.preventDefault(); onSubmit()">
+      <fieldset class="space-y-2">
+        <legend class="text-sm font-semibold text-ink">O que está errado?</legend>
+        @for (reason of reasons; track reason.value) {
+          <label class="block">
+            <input type="radio" name="error-reason" [checked]="model().reason === reason.value" (change)="onSelectReason(reason.value)" />
+            <span class="ml-2 text-ink">{{ reason.label }}</span>
+          </label>
+        }
+      </fieldset>
+      <div class="space-y-1">
+        <label class="block text-sm text-ink-muted" for="error-note">Detalhes (opcional)</label>
+        <textarea
+          id="error-note"
+          rows="3"
+          [formField]="reportForm.note"
+          class="w-full rounded-md border border-line-strong bg-surface-raised px-3 py-2 text-ink"
+        ></textarea>
+        <p class="text-xs text-ink-muted">{{ model().note.length }}/{{ noteMaxLength }}</p>
+        @if (reportForm.note().errors().length) {
+          <p class="text-sm text-rate-again" role="alert">{{ reportForm.note().errors().at(0)?.message }}</p>
+        }
+      </div>
+      @if (errorMessage()) {
+        <p class="text-sm text-rate-again" role="alert">{{ errorMessage() }}</p>
+      }
+      <div class="flex justify-end gap-2">
+        <button appButton variant="ghost" type="button" (click)="closed.emit()">Cancelar</button>
+        <button appButton variant="primary" type="submit" [disabled]="phase() === 'sending'">Enviar</button>
+      </div>
+    </form>
+  }
+}

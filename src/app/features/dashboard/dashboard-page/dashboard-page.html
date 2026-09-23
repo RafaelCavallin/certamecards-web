@@ -4,6 +4,7 @@
       <h1 class="font-serif text-4xl text-ink">{{ greeting() }}{{ firstName() ? ', ' + firstName() : '' }}</h1>
       <div class="flex flex-wrap items-center gap-3">
         <app-sync-indicator [status]="syncService.status()" [pendingCount]="syncService.pendingCount()" />
+        <app-library-button label="Biblioteca" />
         <button appButton variant="ghost" size="sm" type="button" (click)="settingsOpen.set(true)">Ajustes</button>
         <app-sign-out-button />
       </div>
@@ -15,13 +16,7 @@
   </button>
   <app-last-14-days />
   @if (!hasDecks()) {
-    <section class="space-y-4 rounded-md bg-surface p-6 text-center">
-      <h2 class="font-sans text-lg font-semibold text-ink">Crie seu primeiro deck</h2>
-      <p class="text-sm text-ink-muted">
-        Um deck reúne os cartões de uma matéria. Crie um, adicione cartões e comece a repetição espaçada.
-      </p>
-      <button appButton type="button" (click)="onNewDeck()">Novo deck</button>
-    </section>
+    <app-dashboard-empty />
   } @else {
     <section class="space-y-3">
       <div class="flex items-center justify-between">
@@ -30,11 +25,11 @@
       </div>
       @if (subjectFilters().length > 1) {
         <div class="flex flex-wrap gap-2">
-          <button type="button" (click)="onSelectSubject('all')">
+          <button type="button" (click)="selectedSubjectId.set('all')">
             <app-tag [tone]="selectedSubjectId() === 'all' ? 'accent' : 'neutral'">Todas</app-tag>
           </button>
           @for (subject of subjectFilters(); track subject.id) {
-            <button type="button" (click)="onSelectSubject(subject.id)">
+            <button type="button" (click)="selectedSubjectId.set(subject.id)">
               <app-tag [tone]="selectedSubjectId() === subject.id ? 'accent' : 'neutral'">{{ subject.name }}</app-tag>
             </button>
           }
@@ -45,6 +40,7 @@
           <app-deck-row
             [title]="entry.deck.name"
             [subject]="subjectName(entry.deck.subjectId)"
+            [badges]="badgesOf(entry.deck)"
             [due]="entry.due"
             [fresh]="entry.fresh"
             (open)="onOpenDeck(entry.deck.id)"

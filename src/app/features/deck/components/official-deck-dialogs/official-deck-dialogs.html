@@ -1,0 +1,20 @@
+<app-confirm-dialog
+  [open]="cancelOpen()"
+  title="Cancelar inscrição"
+  [message]="cancelMessage()"
+  confirmLabel="Cancelar inscrição"
+  cancelLabel="Manter"
+  (confirmed)="onConfirmCancel()"
+  (canceled)="onDismiss()"
+/>
+<app-duplicate-deck-dialog
+  [open]="duplicateOpen()"
+  [subscribed]="true"
+  [busy]="busy()"
+  [errorMessage]="errorMessage()"
+  [progressOptions]="texts.progressOptions"
+  [subscriptionOptions]="texts.subscriptionOptions"
+  [notice]="texts.notice"
+  (confirmed)="onConfirmDuplicate($event)"
+  (canceled)="onDismiss()"
+/>

@@ -1,7 +1,7 @@
 export interface ReviewLog {
   readonly id: string;
   readonly cardId: string;
-  readonly kind: 'review' | 'reset';
+  readonly kind: 'review' | 'reset' | 'content_update' | 'duplicate';
   readonly rating: number | null;
   readonly reviewedAt: string;
   readonly durationMs: number;

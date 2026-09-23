@@ -21,7 +21,7 @@ export class ReviewWriter {
     const tables = [this.localDb.reviewLogs, this.localDb.cardStates, this.localDb.outbox];
     await this.localDb.transaction('rw', tables, async () => {
       await this.localDb.reviewLogs.put({ ...entry.log, voided: false });
-      await this.localDb.cardStates.put(entry.state);
+      await this.localDb.cardStates.put({ ...entry.state, contentUpdateNote: null, contentUpdatedAt: null });
       await this.localDb.outbox.add({ kind: 'review', log: entry.log, state: entry.state });
     });
   }

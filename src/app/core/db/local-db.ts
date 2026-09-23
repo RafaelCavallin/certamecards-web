@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import Dexie, { type Table } from 'dexie';
 import type { CardState } from '../api/card-state.model';
 import type { Deck } from '../api/deck.model';
+import type { DeckSubscription } from '../api/library.model';
 import type { Subject } from '../api/subject.model';
+import { LOCAL_DB_SCHEMA_VERSIONS } from './local-db-schema';
 import { isDeviceId, isStoredSession } from './local-db.model';
-import type { CardRow, EventRow, MetaRow, OutboxItem, ReviewLogRow, SettingsRow, StoredSession } from './local-db.model';
+import type { CardRow, ErrorReportRow, EventRow, MetaRow, OutboxItem, ReviewLogRow, SettingsRow, StoredSession } from './local-db.model';
 
 const DATABASE_NAME = 'certamecards';
-const DATABASE_VERSION = 2;
 const SESSION_KEY = 'session' as const;
 const DEVICE_ID_KEY = 'deviceId' as const;
 const CURSOR_KEY = 'cursor' as const;
@@ -24,23 +25,12 @@ export class LocalDb extends Dexie {
   outbox!: Table<OutboxItem, number>;
   settings!: Table<SettingsRow, string>;
   events!: Table<EventRow, string>;
+  subscriptions!: Table<DeckSubscription, string>;
+  errorReports!: Table<ErrorReportRow, string>;
 
   constructor() {
     super(DATABASE_NAME);
-    // boolean e null não são chaves válidas no IndexedDB: active, deletedAt e suspended
-    // ficam de fora do índice e são filtrados em memória por quem lê.
-    const storesV1 = {
-      meta: 'key',
-      subjects: 'id',
-      decks: 'id, subjectId',
-      cards: 'id, deckId',
-      cardStates: 'cardId, due, state',
-      reviewLogs: 'id, cardId, reviewedAt, [cardId+reviewedAt]',
-      outbox: '++seq, kind',
-      settings: 'userId',
-    };
-    this.version(1).stores(storesV1);
-    this.version(DATABASE_VERSION).stores({ ...storesV1, events: 'id, occurredAt' });
+    LOCAL_DB_SCHEMA_VERSIONS.forEach((stores, index) => this.version(index + 1).stores(stores));
   }
 
   async getSession(): Promise<StoredSession | null> {
@@ -81,7 +71,8 @@ export class LocalDb extends Dexie {
   }
 
   async clearForResync(): Promise<void> {
-    const tables = [this.subjects, this.decks, this.cards, this.cardStates, this.reviewLogs, this.settings];
+    const tables = [this.subjects, this.decks, this.cards, this.cardStates, this.reviewLogs, this.settings,
+      this.subscriptions, this.errorReports];
     await this.transaction('rw', tables, async () => {
       await Promise.all(tables.map((table) => table.clear()));
     });
@@ -91,7 +82,7 @@ export class LocalDb extends Dexie {
   async clearAllLocalData(): Promise<void> {
     const tables = [
       this.meta, this.subjects, this.decks, this.cards, this.cardStates,
-      this.reviewLogs, this.outbox, this.settings, this.events,
+      this.reviewLogs, this.outbox, this.settings, this.events, this.subscriptions, this.errorReports,
     ];
     await this.transaction('rw', tables, async () => {
       await Promise.all(tables.map((table) => table.clear()));

@@ -25,7 +25,7 @@ export function toFsrsCard(state: CardState | null): Omit<FsrsCard, 'due' | 'las
     last_review: state.lastReview !== null ? new Date(state.lastReview) : undefined,
   };
 }
-export function withoutTransientFields(state: CardState): Omit<CardState, 'suspended' | 'reviewCount'> {
+export function withoutTransientFields(state: CardState): Omit<CardState, 'suspended' | 'reviewCount' | 'contentUpdateNote' | 'contentUpdatedAt'> {
   return {
     cardId: state.cardId,
     state: state.state,
@@ -60,6 +60,8 @@ export function fromFsrsCard(card: FsrsCard, meta: FromFsrsCardMeta): CardState 
     scheduledDays: card.scheduled_days,
     reviewCount,
     suspended: previous?.suspended ?? false,
+    contentUpdateNote: null,
+    contentUpdatedAt: null,
     changeSeq: previous?.changeSeq ?? 0,
   };
 }

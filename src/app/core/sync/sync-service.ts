@@ -7,6 +7,7 @@ import { OutboxFlusher } from './outbox-flusher';
 import { PullRunner } from './pull-runner';
 import { StaleResolver } from './stale-resolver';
 import { registerSyncTriggers } from './sync-triggers';
+import { watchReconnect } from './watch-reconnect';
 import { SyncStatusStore } from './sync-status-store';
 import type { SyncStatus } from './sync-status.model';
 
@@ -37,6 +38,10 @@ export class SyncService {
           void this.flush();
         }
       },
+    });
+    watchReconnect(this.connectivity.online, () => {
+      void this.pull();
+      void this.flush();
     });
     effect(() => {
       if (this.authStore.isAuthenticated()) {

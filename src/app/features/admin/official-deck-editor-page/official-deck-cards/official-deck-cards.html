@@ -1,0 +1,38 @@
+<section class="space-y-3">
+  <div class="flex items-center justify-between">
+    <h2 class="font-sans text-lg font-semibold text-ink">Cartões</h2>
+    <button appButton size="sm" type="button" [disabled]="!online()" (click)="onNew()">Novo cartão</button>
+  </div>
+  @if (failed()) {
+    <p class="text-rate-again" role="alert">Não foi possível carregar os cartões.</p>
+    <button appButton type="button" (click)="load()">Tentar de novo</button>
+  } @else if (result(); as current) {
+    @if (current.items.length === 0) {
+      <p class="text-ink-muted">Este deck ainda não tem cartões.</p>
+    }
+    @for (card of current.items; track card.id) {
+      <button type="button" class="block w-full rounded-md px-4 py-3 text-left hover:bg-surface" (click)="onEdit(card)">
+        <span class="block truncate font-serif text-ink">{{ card.front }}</span>
+        <span class="block truncate text-sm text-ink-muted">{{ card.source ? card.source + ' · ' : '' }}{{ card.back }}</span>
+      </button>
+    }
+    @if (current.total > current.size) {
+      <nav class="flex justify-between" aria-label="Paginação dos cartões">
+        <button appButton variant="ghost" type="button" [disabled]="current.page === 0" (click)="onPage(-1)">Anterior</button>
+        <button appButton variant="ghost" type="button" [disabled]="(current.page + 1) * current.size >= current.total" (click)="onPage(1)">Próxima</button>
+      </nav>
+    }
+  } @else {
+    <p class="text-ink-muted" role="status">Carregando cartões…</p>
+  }
+</section>
+<app-official-card-editor
+  [open]="editorOpen()"
+  [deckId]="deckId()"
+  [card]="editing()"
+  [status]="status()"
+  [subscribers]="subscribers()"
+  [online]="online()"
+  (saved)="onSaved()"
+  (closed)="editorOpen.set(false)"
+/>

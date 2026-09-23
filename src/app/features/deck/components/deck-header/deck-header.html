@@ -1,11 +1,35 @@
-<header class="flex flex-wrap items-center justify-between gap-4">
-  <div>
-    <p class="text-xs font-semibold tracking-wide text-ink-muted uppercase">{{ subject() }}</p>
-    <h1 class="font-serif text-2xl text-ink">{{ name() }}</h1>
+<header class="space-y-3">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <p class="text-xs font-semibold tracking-wide text-ink-muted uppercase">{{ subject() }}</p>
+      <h1 class="font-serif text-2xl text-ink">{{ name() }}</h1>
+      @if (badges().length > 0) {
+        <p class="mt-1 flex flex-wrap gap-2">
+          @for (badge of badges(); track badge) {
+            <app-tag>{{ badge }}</app-tag>
+          }
+        </p>
+      }
+    </div>
+    <div class="flex flex-wrap gap-2">
+      @if (actions().editMetadata) {
+        <button appButton size="sm" type="button" (click)="onEdit()">Editar</button>
+      }
+      @if (actions().resetProgress) {
+        <button appButton size="sm" type="button" [disabled]="!online()" (click)="onResetProgress()">Zerar progresso</button>
+      }
+      @if (actions().duplicate) {
+        <button appButton size="sm" type="button" [disabled]="!online()" (click)="onDuplicate()">Duplicar como deck próprio</button>
+      }
+      @if (actions().cancelSubscription) {
+        <button appButton variant="ghost" size="sm" type="button" [disabled]="!online()" (click)="onCancelSubscription()">Cancelar inscrição</button>
+      }
+      @if (actions().deleteDeck) {
+        <button appButton variant="ghost" size="sm" type="button" (click)="onDelete()">Excluir</button>
+      }
+    </div>
   </div>
-  <div class="flex gap-2">
-    <button appButton size="sm" type="button" (click)="onEdit()">Editar</button>
-    <button appButton size="sm" type="button" (click)="onResetProgress()">Zerar progresso</button>
-    <button appButton variant="ghost" size="sm" type="button" (click)="onDelete()">Excluir</button>
-  </div>
+  @if (!online() && offlineNote()) {
+    <p class="text-xs text-ink-muted">{{ offlineNote() }}</p>
+  }
 </header>

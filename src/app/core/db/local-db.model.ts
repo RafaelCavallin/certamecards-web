@@ -31,6 +31,10 @@ export interface ReviewLogRow extends ReviewLog {
 export interface SettingsRow extends UserSettings {
   readonly userId: string;
 }
+export interface ErrorReportRow {
+  readonly cardId: string;
+  readonly reportedAt: string;
+}
 export type EventRow = ProductEvent;
 export interface OutboxReviewItem {
   readonly seq?: number;

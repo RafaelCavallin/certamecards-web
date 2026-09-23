@@ -1,3 +1,4 @@
+export type OfficialStatus = 'draft' | 'published' | 'discontinued';
 export interface Deck {
   readonly id: string;
   readonly subjectId: string;
@@ -5,6 +6,10 @@ export interface Deck {
   readonly description: string | null;
   readonly origin: string;
   readonly originRef: string | null;
+  readonly originLabel: string | null;
+  readonly officialStatus: OfficialStatus | null;
+  readonly cardCount: number;
+  readonly contentUpdatedAt: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;
   readonly deletedAt: string | null;

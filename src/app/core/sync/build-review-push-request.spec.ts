@@ -9,7 +9,7 @@ function aState(overrides: Partial<CardState> = {}): CardState {
   return {
     cardId: 'c1', state: CARD_STATE_REVIEW, stability: 4, difficulty: 5, due: '2026-09-18T08:00:00Z',
     lastReview: '2026-09-10T00:00:00Z', reps: 3, lapses: 0, learningSteps: 0, scheduledDays: 7,
-    reviewCount: 1, suspended: false, changeSeq: 1, ...overrides,
+    reviewCount: 1, suspended: false, contentUpdateNote: null, contentUpdatedAt: null, changeSeq: 1, ...overrides,
   };
 }
 function aLog(overrides: Partial<ReviewLog> = {}): ReviewLog {

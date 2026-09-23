@@ -30,5 +30,7 @@ it('TU — tamanho sm reduz a altura do botão', () => {
   const fixture = TestBed.createComponent(HostComponent);
   fixture.componentInstance.size = 'sm';
   fixture.detectChanges();
-  expect(queryElement(fixture, 'button')?.className).toContain('h-9');
+  const classes = queryElement(fixture, 'button')?.className;
+  expect(classes).toContain('h-11');
+  expect(classes).toContain('sm:h-9');
 });

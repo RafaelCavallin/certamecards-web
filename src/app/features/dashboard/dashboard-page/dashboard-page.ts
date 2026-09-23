@@ -6,6 +6,7 @@ import { DEFAULT_NEW_PER_DAY, computeDeckCounts } from '../../../core/data/deck-
 import { DecksData } from '../../../core/data/decks-data';
 import { SettingsData } from '../../../core/data/settings-data';
 import { SubjectsData } from '../../../core/data/subjects-data';
+import { deckBadges } from '../../../core/library/deck-badges';
 import { AuthStore } from '../../../core/auth/auth-store';
 import { SyncService } from '../../../core/sync/sync-service';
 import { Button } from '../../../shared/ui/button/button';
@@ -15,13 +16,15 @@ import { SettingsSheet } from '../../settings/settings-sheet/settings-sheet';
 import { SyncIndicator } from '../../../shared/ui/sync-indicator/sync-indicator';
 import { Tag } from '../../../shared/ui/tag/tag';
 import { dashboardContextLine, greetingForHour } from '../../../shared/i18n/plural';
+import { LibraryButton } from '../library-button/library-button';
+import { DashboardEmpty } from '../dashboard-empty/dashboard-empty';
 import { examDaysUntil } from '../dashboard-dates';
 import { Last14Days } from '../last-14-days/last-14-days';
 
 const ALL_SUBJECTS = 'all';
 @Component({
   selector: 'app-dashboard-page',
-  imports: [Button, DeckRow, Tag, SyncIndicator, SignOutButton, Last14Days, SettingsSheet],
+  imports: [Button, DashboardEmpty, LibraryButton, DeckRow, Tag, SyncIndicator, SignOutButton, Last14Days, SettingsSheet],
   templateUrl: './dashboard-page.html',
 })
 export class DashboardPage {
@@ -33,6 +36,7 @@ export class DashboardPage {
   private readonly subjectsData = inject(SubjectsData);
   private readonly router = inject(Router);
   protected readonly syncService = inject(SyncService);
+  protected readonly badgesOf = deckBadges;
   protected readonly selectedSubjectId = signal<string>(ALL_SUBJECTS);
   protected readonly settingsOpen = signal(false);
   protected readonly greeting = computed(() => greetingForHour(new Date().getHours()));
@@ -74,10 +78,6 @@ export class DashboardPage {
   );
   protected subjectName(subjectId: string): string {
     return this.subjectNameById().get(subjectId) ?? '';
-  }
-
-  protected onSelectSubject(subjectId: string): void {
-    this.selectedSubjectId.set(subjectId);
   }
 
   protected onOpenDeck(deckId: string): void {

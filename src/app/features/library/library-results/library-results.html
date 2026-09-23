@@ -1,0 +1,44 @@
+@switch (view()) {
+  @case ('offline') {
+    <section class="space-y-4 rounded-md bg-surface p-6 text-center">
+      <app-offline-notice [online]="false" />
+      <p class="text-sm text-ink-muted">A biblioteca só abre com internet. Seus decks continuam disponíveis para estudar.</p>
+      <button appButton type="button" (click)="back.emit()">Voltar ao painel</button>
+    </section>
+  }
+  @case ('loading') {
+    <p class="text-ink-muted" role="status">Carregando a biblioteca…</p>
+  }
+  @case ('error') {
+    <section class="space-y-4 rounded-md bg-surface p-6 text-center">
+      <p class="text-ink" role="alert">Não foi possível carregar a biblioteca.</p>
+      <button appButton type="button" (click)="retry.emit()">Tentar de novo</button>
+    </section>
+  }
+  @case ('empty-library') {
+    <section class="space-y-2 rounded-md bg-surface p-6 text-center">
+      <h2 class="font-sans text-lg font-semibold text-ink">A biblioteca ainda está vazia</h2>
+      <p class="text-sm text-ink-muted">Novos decks oficiais aparecem aqui assim que forem publicados.</p>
+    </section>
+  }
+  @case ('no-results') {
+    <section class="space-y-4 rounded-md bg-surface p-6 text-center">
+      <p role="status" class="text-ink">Nenhum deck encontrado.</p>
+      <button appButton type="button" (click)="clear.emit()">Limpar busca e filtros</button>
+    </section>
+  }
+  @default {
+    <p class="text-sm text-ink-muted" role="status" aria-live="polite">{{ announcement() }}</p>
+    <div class="space-y-2">
+      @for (deck of items(); track deck.id) {
+        <app-library-deck-item [deck]="deck" (preview)="preview.emit(deck)" (openDeck)="openDeck.emit(deck.id)" />
+      }
+    </div>
+    @if (hasPrevious() || hasNext()) {
+      <nav class="flex justify-between" aria-label="Paginação">
+        <button appButton variant="ghost" type="button" [disabled]="!hasPrevious()" (click)="onPage(-1)">Anterior</button>
+        <button appButton variant="ghost" type="button" [disabled]="!hasNext()" (click)="onPage(1)">Próxima</button>
+      </nav>
+    }
+  }
+}

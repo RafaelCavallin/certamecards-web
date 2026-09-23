@@ -21,7 +21,7 @@ function aState(overrides: Partial<CardState> = {}): CardState {
     learningSteps: 0,
     scheduledDays: 7,
     reviewCount: 3,
-    suspended: false,
+    suspended: false, contentUpdateNote: null, contentUpdatedAt: null,
     changeSeq: 1,
     ...overrides,
   };

@@ -1,0 +1,32 @@
+<app-sheet [open]="open()" title="Cartão oficial" (closed)="closed.emit()">
+  @if (card(); as current) {
+    <div class="space-y-4">
+      <p class="font-serif text-lg text-ink">{{ current.front }}</p>
+      <p class="whitespace-pre-line text-ink-muted">{{ current.back }}</p>
+      @if (current.source) {
+        <p class="text-xs text-ink-muted">Fonte: {{ current.source }}</p>
+      }
+      <div class="flex flex-wrap items-center gap-2 border-t border-line pt-4">
+        <button appButton size="sm" type="button" [disabled]="!online()" (click)="onToggleSuspend(current.id)">
+          {{ suspended() ? 'Reativar' : 'Suspender' }}
+        </button>
+        <button appButton variant="ghost" size="sm" type="button" [disabled]="!online()" (click)="onReport(current.id)">
+          Apontar erro
+        </button>
+        @if (!online()) {
+          <span class="text-xs text-ink-muted">Isso precisa de conexão.</span>
+        }
+      </div>
+    </div>
+  }
+</app-sheet>
+<app-sheet [open]="flow.phase() !== 'closed'" title="Apontar erro" (closed)="onCloseReport()">
+  @if (flow.phase() !== 'closed') {
+    <app-error-report-form
+      [phase]="flow.phase()"
+      [errorMessage]="flow.errorMessage()"
+      (submitted)="onSubmit($event)"
+      (closed)="onCloseReport()"
+    />
+  }
+</app-sheet>

@@ -18,7 +18,7 @@ export default defineConfig({
         branches: 80,
         functions: 80,
         statements: 80,
-        'src/app/core/{scheduler,study,sync,auth}/**': {
+        'src/app/core/{scheduler,study,sync,auth,library}/**': {
           lines: 90,
           branches: 90,
           functions: 90,

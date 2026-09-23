@@ -12,7 +12,7 @@ let db: LocalDb;
 
 function emptyPage(overrides: Partial<ChangesPage> = {}): ChangesPage {
   return {
-    subjects: [], decks: [], cards: [], cardStates: [], reviewLogs: [], reviewVoids: [],
+    subjects: [], decks: [], cards: [], cardStates: [], reviewLogs: [], reviewVoids: [], subscriptions: [],
     settings: null, nextCursor: 0, hasMore: false, ...overrides,
   };
 }
@@ -47,7 +47,7 @@ it('TI-26 — 410 força resync completo preservando a fila de sincronização',
     state: {
       cardId: 'c1', state: 1, stability: 1, difficulty: 5, due: '2026-09-18T00:00:00Z',
       lastReview: '2026-09-17T00:00:00Z', reps: 1, lapses: 0, learningSteps: 0, scheduledDays: 0,
-      reviewCount: 1, suspended: false, changeSeq: 0,
+      reviewCount: 1, suspended: false, contentUpdateNote: null, contentUpdatedAt: null, changeSeq: 0,
     },
   });
   await db.setCursor(500);

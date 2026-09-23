@@ -1,0 +1,25 @@
+<section class="space-y-4 rounded-md bg-surface p-6 text-center">
+  <h2 class="font-sans text-lg font-semibold text-ink">Crie seu primeiro deck</h2>
+  <p class="text-sm text-ink-muted">
+    Um deck reúne os cartões de uma matéria. Crie um, adicione cartões e comece a repetição espaçada.
+  </p>
+  <button appButton type="button" (click)="onNewDeck()">Novo deck</button>
+</section>
+@if (suggestions().length > 0) {
+  <section class="space-y-3" aria-labelledby="suggestions-title">
+    <div class="flex items-center justify-between">
+      <h2 id="suggestions-title" class="font-sans text-lg font-semibold text-ink">Comece por um deck oficial</h2>
+      <app-library-button label="Ver biblioteca" source="empty_state" />
+    </div>
+    @for (deck of suggestions(); track deck.id) {
+      <div class="flex flex-wrap items-center gap-4 rounded-md bg-surface px-4 py-3">
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-semibold tracking-wide text-ink-muted uppercase">{{ deck.subjectName }}</p>
+          <p class="font-semibold text-ink">{{ deck.name }}</p>
+          <p class="text-sm text-ink-muted">{{ cardsLabel(deck.cardCount) }}</p>
+        </div>
+        <button appButton type="button" [attr.aria-label]="'Ver a prévia de ' + deck.name" (click)="onOpenSuggestion(deck.id)">Ver prévia</button>
+      </div>
+    }
+  </section>
+}

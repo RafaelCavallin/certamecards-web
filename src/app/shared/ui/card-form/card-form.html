@@ -1,0 +1,27 @@
+<form class="space-y-4" (keydown)="onKeydown($event)" (submit)="onSubmit(); $event.preventDefault()">
+  <div class="space-y-1">
+    <label class="block text-sm text-ink-muted" for="card-front">Pergunta</label>
+    <textarea id="card-front" [formField]="cardForm.front" class="w-full rounded-md border border-line-strong bg-surface-raised px-3 py-2 text-ink"></textarea>
+    @if (cardForm.front().touched() && cardForm.front().errors().length) {
+      <p class="text-sm text-rate-again" role="alert">{{ cardForm.front().errors().at(0)?.message }}</p>
+    }
+  </div>
+  <div class="space-y-1">
+    <label class="block text-sm text-ink-muted" for="card-back">Resposta</label>
+    <textarea id="card-back" [formField]="cardForm.back" class="w-full rounded-md border border-line-strong bg-surface-raised px-3 py-2 text-ink"></textarea>
+    @if (cardForm.back().touched() && cardForm.back().errors().length) {
+      <p class="text-sm text-rate-again" role="alert">{{ cardForm.back().errors().at(0)?.message }}</p>
+    }
+  </div>
+  <div class="space-y-1">
+    <label class="block text-sm text-ink-muted" for="card-source">Fonte (opcional)</label>
+    <input id="card-source" type="text" [formField]="cardForm.source" class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised px-3 text-ink" />
+    @if (cardForm.source().touched() && cardForm.source().errors().length) {
+      <p class="text-sm text-rate-again" role="alert">{{ cardForm.source().errors().at(0)?.message }}</p>
+    }
+  </div>
+  <app-offline-notice [online]="online()" />
+  <button appButton type="submit" [disabled]="!online()">
+    {{ submitLabel() ?? (isEditing() ? 'Salvar' : 'Salvar e adicionar outro') }}
+  </button>
+</form>

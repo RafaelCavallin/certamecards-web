@@ -1,0 +1,55 @@
+<main class="mx-auto flex max-w-[880px] flex-col gap-6 px-4 py-10">
+  <h1 class="font-serif text-2xl text-ink">Área administrativa</h1>
+  <app-admin-nav />
+  <div class="space-y-1">
+    <label class="block text-sm text-ink-muted" for="report-status">Situação</label>
+    <select
+      id="report-status"
+      #statusSelect
+      class="h-[var(--control-height)] rounded-md border border-line-strong bg-surface-raised px-3 text-ink"
+      (change)="onStatus(statusSelect.value)"
+    >
+      @for (item of statuses; track item) {
+        <option [value]="item" [selected]="status() === item">{{ statusLabels[item] }}</option>
+      }
+    </select>
+  </div>
+  @if (errorMessage(); as message) {
+    <p class="text-sm text-rate-again" role="alert">{{ message }}</p>
+  }
+  @if (!online()) {
+    <app-offline-notice [online]="false" />
+  } @else if (failed()) {
+    <p class="text-rate-again" role="alert">Não foi possível carregar os apontamentos.</p>
+    <button appButton type="button" (click)="load()">Tentar de novo</button>
+  } @else if (result(); as current) {
+    @if (current.items.length === 0) {
+      <p class="text-ink-muted">Nenhum apontamento nesta situação.</p>
+    }
+    <ul class="space-y-3">
+      @for (report of current.items; track report.id) {
+        <li class="space-y-2 rounded-md bg-surface p-4">
+          <p class="text-xs font-semibold tracking-wide text-ink-muted uppercase">{{ report.subjectName }} · {{ report.deckName }}</p>
+          <p class="font-serif text-ink">{{ report.cardFront }}</p>
+          <p class="text-sm text-ink">{{ reasonLabels[report.reason] }}@if (report.note) { — {{ report.note }} }</p>
+          <p class="text-xs text-ink-muted">Apontado por {{ report.reporterName }} em {{ formatDate(report.createdAt) }}</p>
+          <div class="flex flex-wrap gap-2">
+            <button appButton size="sm" type="button" (click)="onOpenCard(report)">Abrir cartão</button>
+            @if (report.status === 'open') {
+              <button appButton size="sm" type="button" (click)="onClose(report, 'resolved')">Resolvido</button>
+              <button appButton variant="ghost" size="sm" type="button" (click)="onClose(report, 'rejected')">Improcedente</button>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+    @if (current.total > current.size) {
+      <nav class="flex justify-between" aria-label="Paginação">
+        <button appButton variant="ghost" type="button" [disabled]="current.page === 0" (click)="onPage(-1)">Anterior</button>
+        <button appButton variant="ghost" type="button" [disabled]="(current.page + 1) * current.size >= current.total" (click)="onPage(1)">Próxima</button>
+      </nav>
+    }
+  } @else {
+    <p class="text-ink-muted" role="status">Carregando apontamentos…</p>
+  }
+</main>

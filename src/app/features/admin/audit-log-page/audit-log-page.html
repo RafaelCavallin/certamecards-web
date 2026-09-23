@@ -1,0 +1,58 @@
+<main class="mx-auto flex max-w-[880px] flex-col gap-6 px-4 py-10">
+  <h1 class="font-serif text-2xl text-ink">Área administrativa</h1>
+  <app-admin-nav />
+  <div class="flex flex-wrap gap-3">
+    <div class="space-y-1">
+      <label class="block text-sm text-ink-muted" for="log-actor">Administrador</label>
+      <select id="log-actor" #actorSelect class="h-[var(--control-height)] rounded-md border border-line-strong bg-surface-raised px-3 text-ink" (change)="onFilter('actorId', actorSelect.value)">
+        <option value="">Todos</option>
+        @for (admin of admins(); track admin.id) {
+          <option [value]="admin.id">{{ admin.displayName }}</option>
+        }
+      </select>
+    </div>
+    <div class="space-y-1">
+      <label class="block text-sm text-ink-muted" for="log-action">Ação</label>
+      <select id="log-action" #actionSelect class="h-[var(--control-height)] rounded-md border border-line-strong bg-surface-raised px-3 text-ink" (change)="onFilter('action', actionSelect.value)">
+        <option value="">Todas</option>
+        @for (key of actionKeys; track key) {
+          <option [value]="key">{{ actionLabel(key) }}</option>
+        }
+      </select>
+    </div>
+    <div class="space-y-1">
+      <label class="block text-sm text-ink-muted" for="log-from">De</label>
+      <input id="log-from" #fromInput type="date" class="h-[var(--control-height)] rounded-md border border-line-strong bg-surface-raised px-3 text-ink" (change)="onFilter('from', fromInput.value)" />
+    </div>
+    <div class="space-y-1">
+      <label class="block text-sm text-ink-muted" for="log-to">Até</label>
+      <input id="log-to" #toInput type="date" class="h-[var(--control-height)] rounded-md border border-line-strong bg-surface-raised px-3 text-ink" (change)="onFilter('to', toInput.value)" />
+    </div>
+  </div>
+  @if (!online()) {
+    <app-offline-notice [online]="false" />
+  } @else if (failed()) {
+    <p class="text-rate-again" role="alert">Não foi possível carregar o registro.</p>
+    <button appButton type="button" (click)="fetch(false)">Tentar de novo</button>
+  } @else if (items(); as list) {
+    @if (list.length === 0) {
+      <p class="text-ink-muted">Nenhuma ação registrada neste filtro.</p>
+    }
+    <ol class="space-y-3">
+      @for (entry of list; track entry.id) {
+        <li class="space-y-1 rounded-md bg-surface p-4">
+          <p class="text-sm text-ink"><strong>{{ actionLabel(entry.action) }}</strong>@if (entry.targetLabel) { — {{ entry.targetLabel }} }</p>
+          <p class="text-xs text-ink-muted">{{ entry.actorName }} · {{ formatDate(entry.createdAt) }}</p>
+          @for (line of summarize(entry.changes); track line) {
+            <p class="text-xs text-ink-muted">{{ line }}</p>
+          }
+        </li>
+      }
+    </ol>
+    @if (nextBefore()) {
+      <button appButton type="button" (click)="onMore()">Carregar mais</button>
+    }
+  } @else {
+    <p class="text-ink-muted" role="status">Carregando registro…</p>
+  }
+</main>

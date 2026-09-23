@@ -11,6 +11,7 @@ import { LocalDb } from '../../../core/db/local-db';
 import { DecksData } from '../../../core/data/decks-data';
 import { SettingsData } from '../../../core/data/settings-data';
 import { SubjectsData } from '../../../core/data/subjects-data';
+import { SuggestionsService } from '../../../core/library/suggestions-service';
 import { SyncService } from '../../../core/sync/sync-service';
 import { DashboardPage } from './dashboard-page';
 
@@ -21,7 +22,7 @@ export function aDeck(overrides: Partial<Deck> = {}): Deck {
     name: 'CF/88',
     description: null,
     origin: 'own',
-    originRef: null,
+    originRef: null, originLabel: null, officialStatus: null, cardCount: 0, contentUpdatedAt: null,
     createdAt: '2026-09-01T00:00:00Z',
     updatedAt: '2026-09-01T00:00:00Z',
     deletedAt: null,
@@ -56,6 +57,7 @@ export function setupDashboard(
       { provide: SettingsData, useValue: { current: () => undefined } },
       { provide: SubjectsData, useValue: { active: () => options.subjects ?? [], all: () => options.subjects ?? [] } },
       { provide: Router, useValue: { navigate } },
+      { provide: SuggestionsService, useValue: { load: () => Promise.resolve([]) } },
       { provide: SyncService, useValue: { status: () => 'synced', pendingCount: () => 0, flush: () => Promise.resolve() } },
       { provide: LocalDb, useValue: { clearAllLocalData: () => Promise.resolve() } },
     ],

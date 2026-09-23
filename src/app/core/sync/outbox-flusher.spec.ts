@@ -14,7 +14,7 @@ function aState(cardId: string): CardState {
   return {
     cardId, state: CARD_STATE_REVIEW, stability: 4, difficulty: 5, due: '2026-09-18T08:00:00Z',
     lastReview: '2026-09-10T00:00:00Z', reps: 1, lapses: 0, learningSteps: 0, scheduledDays: 7,
-    reviewCount: 1, suspended: false, changeSeq: 0,
+    reviewCount: 1, suspended: false, contentUpdateNote: null, contentUpdatedAt: null, changeSeq: 0,
   };
 }
 function aLog(id: string, cardId: string): ReviewLog {
