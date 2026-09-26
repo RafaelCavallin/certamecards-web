@@ -11,16 +11,25 @@ interface Harness {
   readonly httpMock: HttpTestingController;
   readonly handleUnauthorized: ReturnType<typeof vi.fn<() => Promise<boolean>>>;
   setToken(token: string | null): void;
+  setUserId(userId: string | null): void;
 }
 
-function setup(initialToken: string | null): Harness {
+function setup(initialToken: string | null, initialUserId = 'user-1'): Harness {
   let currentToken = initialToken;
+  let currentUserId: string | null = initialUserId;
   const handleUnauthorized = vi.fn<() => Promise<boolean>>();
   TestBed.configureTestingModule({
     providers: [
       provideHttpClient(withInterceptors([authInterceptor])),
       provideHttpClientTesting(),
-      { provide: AuthStore, useValue: { accessToken: () => currentToken, handleUnauthorized } },
+      {
+        provide: AuthStore,
+        useValue: {
+          accessToken: () => currentToken,
+          user: () => (currentUserId === null ? null : { id: currentUserId }),
+          handleUnauthorized,
+        },
+      },
     ],
   });
   return {
@@ -30,8 +39,30 @@ function setup(initialToken: string | null): Harness {
     setToken: (token) => {
       currentToken = token;
     },
+    setUserId: (userId) => {
+      currentUserId = userId;
+    },
   };
 }
+
+it('TU — sem token de acesso, não anexa cabeçalho de autorização', () => {
+  const { http, httpMock } = setup(null);
+  http.get('/api/decks').subscribe();
+  const req = httpMock.expectOne('/api/decks');
+  expect(req.request.headers.has('Authorization')).toBe(false);
+  req.flush([]);
+  httpMock.verify();
+});
+
+it('TU — erro não relacionado a 401 propaga sem tentar reautenticar', async () => {
+  const harness = setup('token-1');
+  const resultPromise = firstValueFrom(harness.http.get('/api/decks')).catch((error: unknown) => error);
+  const req = harness.httpMock.expectOne('/api/decks');
+  req.flush({ code: 'server_error', detail: 'x' }, { status: 500, statusText: 'Server Error' });
+  await resultPromise;
+  expect(harness.handleUnauthorized).not.toHaveBeenCalled();
+  harness.httpMock.verify();
+});
 
 it('TU — anexa o token de acesso às chamadas autenticadas', () => {
   const { http, httpMock } = setup('token-1');
@@ -72,6 +103,20 @@ it('TI-29 — repete a requisição uma vez com o novo token depois de um 401', 
 it('TI-29 — um segundo 401 depois do refresh propaga o erro original', async () => {
   const harness = setup('token-1');
   harness.handleUnauthorized.mockResolvedValue(false);
+  const resultPromise = firstValueFrom(harness.http.get('/api/decks'));
+  const req = harness.httpMock.expectOne('/api/decks');
+  req.flush({ code: 'unauthenticated', detail: 'x' }, { status: 401, statusText: 'Unauthorized' });
+  await expect(resultPromise).rejects.toMatchObject({ status: 401 });
+  harness.httpMock.verify();
+});
+
+it('TU-78 — refresh trocando de identidade não repete a requisição com a nova conta', async () => {
+  const harness = setup('token-1', 'user-a');
+  harness.handleUnauthorized.mockImplementation(() => {
+    harness.setToken('token-b');
+    harness.setUserId('user-b');
+    return Promise.resolve(true);
+  });
   const resultPromise = firstValueFrom(harness.http.get('/api/decks'));
   const req = harness.httpMock.expectOne('/api/decks');
   req.flush({ code: 'unauthenticated', detail: 'x' }, { status: 401, statusText: 'Unauthorized' });

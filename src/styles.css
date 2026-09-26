@@ -4,6 +4,7 @@
 @import '@fontsource/ibm-plex-mono';
 @import './styles/tokens.css';
 @import './styles/theme.css';
+@import './styles/cdk-scrolling.css';
 
 body {
   background-color: var(--bg);

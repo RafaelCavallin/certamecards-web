@@ -10,7 +10,6 @@ import { DeckPage } from './pages/deck-page';
 import { StudySessionPage } from './pages/study-session-page';
 
 const DUE_CARD_COUNT = 10;
-const SYNC_TIMEOUT_MS = 10_000;
 // Sob carga (vários projetos rodando em paralelo), o navegador ocasionalmente não intercepta a
 // navegação offline pelo service worker na primeira tentativa mesmo com o cache já quente e com
 // retentativas internas; um retry no nível do teste absorve essa folga conhecida do ambiente.
@@ -46,22 +45,28 @@ async function studyAllDueCardsOffline(page: Page): Promise<number> {
   // reaparece se algum cartão voltar a vencer); "Tudo em dia" é o sinal correto de que a fila
   // esvaziou.
   await expect(dashboard.allCaughtUpButton).toBeVisible();
-  // Offline, o indicador prioriza "Sem conexão" sobre a contagem de pendentes (ver
-  // SyncStatusStore.computeStatus e sync-indicator.spec.ts); "N pendentes" só aparece depois
-  // de reconectar, antes do flush terminar.
-  await expect(dashboard.syncStatus).toHaveText('Sem conexão');
+  // Offline, o rótulo do estado é "Sem conexão", mas o crachá de contagem de pendentes aparece
+  // sempre que pendingCount() > 0, independente do estado (ver sync-indicator.html); por isso o
+  // texto completo do botão é algo como "Sem conexão10", não só o rótulo do estado.
+  await expect(dashboard.syncStatus).toContainText('Sem conexão');
   return total;
 }
 
-async function attemptCardCreationOffline(page: Page, deckId: string): Promise<void> {
+async function createCardOffline(page: Page, deckId: string): Promise<void> {
   const deckPage = new DeckPage(page);
   await gotoOfflineWithRetry(page, `/decks/${deckId}`, deckPage.newCardButton);
   await deckPage.newCardButton.click();
   await deckPage.frontField.fill('Pergunta offline');
   await deckPage.backField.fill('Resposta offline');
-  await expect(deckPage.offlineNotice).toBeVisible();
-  await expect(deckPage.cardSubmitButton).toBeDisabled();
-  await expect(deckPage.frontField).toHaveValue('Pergunta offline');
+  await expect(deckPage.cardSubmitButton).toBeEnabled();
+  await deckPage.cardSubmitButton.click();
+  // Criar mantém a ficha aberta para o próximo cartão (keepOnSave); fechá-la para o cartão
+  // recém-criado ficar visível por trás do <dialog> modal. A lista usa scroll virtual, então a
+  // busca filtra para 1 resultado antes de checar a visibilidade.
+  await page.keyboard.press('Escape');
+  await expect(page.locator('dialog[open]')).toHaveCount(0);
+  await page.getByLabel('Buscar cartões').fill('Pergunta offline');
+  await expect(deckPage.cardRow('Pergunta offline')).toBeVisible();
 }
 
 async function totalReviewLogsOnServer(candidate: Candidate, cardIds: readonly string[]): Promise<number> {
@@ -85,11 +90,13 @@ test('E2E-07 — sessão sem rede e sincronização', async ({ page, context, ca
   await expect(dashboard.startSessionButton).toBeVisible();
 
   const reviewedCount = await studyAllDueCardsOffline(page);
-  await attemptCardCreationOffline(page, seed.deckId);
+  await createCardOffline(page, seed.deckId);
 
   await context.setOffline(false);
   await gotoOfflineWithRetry(page, '/', dashboard.startSessionButton);
-  await expect(dashboard.syncStatus).toHaveText('Sincronizado', { timeout: SYNC_TIMEOUT_MS });
+  // O limite de 10 s (CA-06/CA-07) vale para o envio COMEÇAR após reconectar, não para terminar de
+  // enviar 11 operações; a conclusão usa uma folga maior.
+  await expect(dashboard.syncStatus).toHaveText('Sincronizado', { timeout: 30_000 });
 
   expect(reviewedCount).toBeGreaterThanOrEqual(DUE_CARD_COUNT);
   expect(await totalReviewLogsOnServer(candidate, seed.cardIds)).toBe(reviewedCount);

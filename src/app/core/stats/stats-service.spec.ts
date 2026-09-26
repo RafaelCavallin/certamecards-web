@@ -2,17 +2,19 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, expect, it, vi } from 'vitest';
 import { waitFor } from '../../testing/dom-testing';
 import { SettingsData } from '../data/settings-data';
-import { LocalDb } from '../db/local-db';
+import { AccountDb } from '../db/account-db';
+import { CurrentAccountDb } from '../db/current-account-db';
 import { StatsService } from './stats-service';
 
 const NOW = new Date('2026-09-17T18:00:00Z');
-let db: LocalDb;
+let db: AccountDb;
 
 function setup(): StatsService {
   TestBed.configureTestingModule({
     providers: [{ provide: SettingsData, useValue: { current: () => ({ timeZone: 'America/Sao_Paulo' }) } }],
   });
-  db = TestBed.inject(LocalDb);
+  db = new AccountDb('stats-service-test');
+  TestBed.inject(CurrentAccountDb).set({ db, userId: 'stats-service-test' });
   return TestBed.inject(StatsService);
 }
 
@@ -39,6 +41,10 @@ it('TU-18 — last14Days conta as revisões gravadas localmente', async () => {
     sessionId: null,
     changeSeq: 1,
     voided: false,
+    eventAt: NOW.toISOString(),
+    eventCounter: 0,
+    eventDeviceId: 'device-1',
+    operationId: 'log-1',
   });
 
   await waitFor(() => statsService.last14Days().totalReviews === 1);

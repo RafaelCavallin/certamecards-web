@@ -1,42 +1,18 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, expect, it, vi } from 'vitest';
 import { waitFor } from '../../testing/dom-testing';
-import type { Deck } from '../api/deck.model';
-import { DecksApi } from '../api/decks-api';
-import { LocalDb } from '../db/local-db';
+import { AccountDb } from '../db/account-db';
+import { CurrentAccountDb } from '../db/current-account-db';
 import { EventsService } from '../events/events-service';
-import { SyncService } from '../sync/sync-service';
 import { DecksData } from './decks-data';
 
-let db: LocalDb;
+let db: AccountDb;
 
-function aDeck(overrides: Partial<Deck> = {}): Deck {
-  return {
-    id: 'd1',
-    subjectId: 's1',
-    name: 'CF/88',
-    description: null,
-    origin: 'own',
-    originRef: null, originLabel: null, officialStatus: null, cardCount: 0, contentUpdatedAt: null,
-    createdAt: '2026-09-17T00:00:00Z',
-    updatedAt: '2026-09-17T00:00:00Z',
-    deletedAt: null,
-    version: 1,
-    changeSeq: 1,
-    ...overrides,
-  };
-}
-function setup(decksApi: Partial<DecksApi>): { decksData: DecksData; syncPull: ReturnType<typeof vi.fn> } {
-  const syncPull = vi.fn().mockResolvedValue(undefined);
-  TestBed.configureTestingModule({
-    providers: [
-      { provide: DecksApi, useValue: decksApi },
-      { provide: SyncService, useValue: { pull: syncPull } },
-      { provide: EventsService, useValue: { record: vi.fn() } },
-    ],
-  });
-  db = TestBed.inject(LocalDb);
-  return { decksData: TestBed.inject(DecksData), syncPull };
+function setup(): DecksData {
+  TestBed.configureTestingModule({ providers: [{ provide: EventsService, useValue: { record: vi.fn() } }] });
+  db = new AccountDb('decks-data-test');
+  TestBed.inject(CurrentAccountDb).set({ db, userId: 'decks-data-test' });
+  return TestBed.inject(DecksData);
 }
 
 afterEach(async () => {
@@ -44,40 +20,54 @@ afterEach(async () => {
 });
 
 it('TU — active devolve só os decks não excluídos', async () => {
-  const { decksData } = setup({});
-  await db.decks.bulkAdd([aDeck(), aDeck({ id: 'd2', deletedAt: '2026-09-18T00:00:00Z' })]);
+  const decksData = setup();
+  await db.decks.bulkAdd([
+    { id: 'd1', subjectId: 's1', name: 'CF/88', description: null, origin: 'own', originRef: null, originLabel: null, officialStatus: null, cardCount: 0, contentUpdatedAt: null, createdAt: 'x', updatedAt: 'x', deletedAt: null, version: 1, changeSeq: 1 },
+    { id: 'd2', subjectId: 's1', name: 'Excluído', description: null, origin: 'own', originRef: null, originLabel: null, officialStatus: null, cardCount: 0, contentUpdatedAt: null, createdAt: 'x', updatedAt: 'x', deletedAt: 'x', version: 1, changeSeq: 1 },
+  ]);
   await waitFor(() => decksData.active().length > 0);
   expect(decksData.active().map((deck) => deck.id)).toEqual(['d1']);
 });
 
-it('TU — create grava o deck retornado pela API no Dexie e sincroniza', async () => {
-  const create = vi.fn().mockResolvedValue(aDeck());
-  const { decksData, syncPull } = setup({ create });
+it('TU-67 — create grava a projeção local sem chamada de rede', async () => {
+  const decksData = setup();
+  await db.subjects.add({ id: 's1', name: 'Direito', active: true, changeSeq: 1 });
   const created = await decksData.create({ id: 'd1', subjectId: 's1', name: 'CF/88', description: null });
   expect(created.id).toBe('d1');
   expect(await db.decks.get('d1')).toMatchObject({ name: 'CF/88' });
-  expect(syncPull).toHaveBeenCalledOnce();
+  expect(await db.syncOperations.where('entityId').equals('d1').count()).toBe(1);
 });
 
 it('TU — update grava a nova versão do deck', async () => {
-  const update = vi.fn().mockResolvedValue(aDeck({ name: 'Novo nome', version: 2 }));
-  const { decksData } = setup({ update });
-  await decksData.update('d1', 1, { name: 'Novo nome' });
-  expect(await db.decks.get('d1')).toMatchObject({ name: 'Novo nome', version: 2 });
+  const decksData = setup();
+  await db.subjects.add({ id: 's1', name: 'Direito', active: true, changeSeq: 1 });
+  await decksData.create({ id: 'd1', subjectId: 's1', name: 'CF/88', description: null });
+  await decksData.update('d1', { name: 'Novo nome' });
+  expect(await db.decks.get('d1')).toMatchObject({ name: 'Novo nome', version: 1 });
 });
 
-it('TU — delete remove o deck do Dexie', async () => {
-  const deleteFn = vi.fn().mockResolvedValue(undefined);
-  const { decksData } = setup({ delete: deleteFn });
-  await db.decks.add(aDeck());
-  await decksData.delete('d1', 1);
-  expect(await db.decks.get('d1')).toBeUndefined();
+it('TU — delete marca o deck como excluído no Dexie', async () => {
+  const decksData = setup();
+  await db.subjects.add({ id: 's1', name: 'Direito', active: true, changeSeq: 1 });
+  await decksData.create({ id: 'd1', subjectId: 's1', name: 'CF/88', description: null });
+  await decksData.delete('d1');
+  expect((await db.decks.get('d1'))?.deletedAt).not.toBeNull();
 });
 
-it('TU — resetProgress aciona a API e sincroniza', async () => {
-  const resetProgress = vi.fn().mockResolvedValue({ resetCards: 3, cursorHint: 10 });
-  const { decksData, syncPull } = setup({ resetProgress });
+it('TU-77 — resetProgress marca os cartões do deck como novos imediatamente', async () => {
+  const decksData = setup();
+  await db.subjects.add({ id: 's1', name: 'Direito', active: true, changeSeq: 1 });
+  await decksData.create({ id: 'd1', subjectId: 's1', name: 'CF/88', description: null });
+  await db.cards.add({
+    id: 'c1', deckId: 'd1', type: 'basic', front: 'Q', back: 'R', source: null,
+    createdAt: 'x', updatedAt: 'x', deletedAt: null, version: 1, changeSeq: 1, searchText: 'q r',
+  });
+  await db.cardStates.add({
+    cardId: 'c1', state: 2, stability: 4, difficulty: 5, due: '2026-09-17T00:00:00Z', lastReview: 'x',
+    reps: 3, lapses: 0, learningSteps: 0, scheduledDays: 7, reviewCount: 3, suspended: false,
+    contentUpdateNote: null, contentUpdatedAt: null, changeSeq: 1,
+  });
   await decksData.resetProgress('d1');
-  expect(resetProgress).toHaveBeenCalledWith('d1');
-  expect(syncPull).toHaveBeenCalledOnce();
+  expect((await db.cardStates.get('c1'))?.state).toBe(0);
+  expect(await db.deckResets.where('deckId').equals('d1').count()).toBe(1);
 });

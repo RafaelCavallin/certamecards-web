@@ -9,7 +9,7 @@ function fillFrontAndBack(fixture: ReturnType<typeof TestBed.createComponent<Car
   fixture.detectChanges();
 }
 
-it('TU-12 — não salva sem pergunta ou sem resposta', async () => {
+it('não salva sem pergunta ou sem resposta', async () => {
   const fixture = TestBed.createComponent(CardForm);
   const handler = vi.fn();
   fixture.componentInstance.saved.subscribe(handler);
@@ -19,7 +19,7 @@ it('TU-12 — não salva sem pergunta ou sem resposta', async () => {
   expect(handler).not.toHaveBeenCalled();
 });
 
-it('TU-12 — "Salvar e adicionar outro" emite saved e limpa o formulário', async () => {
+it('"Salvar e adicionar outro" emite saved e limpa o formulário', async () => {
   const fixture = TestBed.createComponent(CardForm);
   const handler = vi.fn();
   fixture.componentInstance.saved.subscribe(handler);
@@ -53,13 +53,12 @@ it('TU — modo edição mostra o rótulo Salvar', () => {
   expect(button.textContent?.trim()).toBe('Salvar');
 });
 
-it('TU — desabilita o envio e mostra o aviso quando está sem rede', () => {
+it('TU — o envio continua disponível sem rede', () => {
   const fixture = TestBed.createComponent(CardForm);
-  fixture.componentRef.setInput('online', false);
   fixture.detectChanges();
   const button = queryElement(fixture, 'button[type="submit"]') as HTMLButtonElement;
-  expect(button.disabled).toBe(true);
-  expect(rootText(fixture)).toContain('Isso precisa de conexão.');
+  expect(button.disabled).toBe(false);
+  expect(rootText(fixture)).not.toContain('Isso precisa de conexão.');
 });
 
 it('TU — keepOnSave mantém o texto depois de emitir e clear() limpa por fora', async () => {
@@ -74,6 +73,26 @@ it('TU — keepOnSave mantém o texto depois de emitir e clear() limpa por fora'
   fixture.componentInstance.clear();
   fixture.detectChanges();
   expect((queryElement(fixture, '#card-front') as HTMLTextAreaElement).value).toBe('');
+});
+
+it('TU — saving desabilita os campos e o botão de envio', () => {
+  const fixture = TestBed.createComponent(CardForm);
+  fixture.componentRef.setInput('saving', true);
+  fixture.detectChanges();
+  expect((queryElement(fixture, '#card-front') as HTMLTextAreaElement).disabled).toBe(true);
+  expect((queryElement(fixture, '#card-back') as HTMLTextAreaElement).disabled).toBe(true);
+  expect((queryElement(fixture, 'button[type="submit"]') as HTMLButtonElement).disabled).toBe(true);
+});
+
+it('TU — saving ignora um novo envio disparado por Ctrl+Enter', async () => {
+  const fixture = TestBed.createComponent(CardForm);
+  const handler = vi.fn();
+  fixture.componentInstance.saved.subscribe(handler);
+  fixture.componentRef.setInput('saving', true);
+  fixture.detectChanges();
+  submitForm(fixture);
+  await fixture.whenStable();
+  expect(handler).not.toHaveBeenCalled();
 });
 
 it('TU — submitLabel substitui o rótulo do botão', () => {

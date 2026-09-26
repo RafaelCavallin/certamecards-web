@@ -23,14 +23,20 @@
       </div>
       <button
         type="submit"
-        class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised text-ink"
+        [disabled]="!online()"
+        class="h-[var(--control-height)] w-full rounded-md border border-line-strong bg-surface-raised text-ink disabled:opacity-55"
       >
         Continuar
       </button>
+      @if (!online()) {
+        <p class="text-center text-xs text-ink-faint">Excluir a conta precisa de conexão.</p>
+      }
     </form>
-    <a class="text-center text-sm text-ink-muted underline" [href]="googleReauthUrl">
-      Ou confirme com um novo login no Google
-    </a>
+    @if (googleSignInEnabled) {
+      <a class="text-center text-sm text-ink-muted underline" [href]="googleReauthUrl">
+        Ou confirme com um novo login no Google
+      </a>
+    }
   } @else {
     <div class="space-y-4 rounded-lg border border-line-strong bg-surface p-6 text-center">
       <p class="text-ink">
@@ -43,11 +49,14 @@
         <button
           type="button"
           (click)="onConfirmDelete()"
-          [disabled]="submitting()"
+          [disabled]="submitting() || !online()"
           class="h-[var(--control-height)] w-full rounded-md bg-amber text-on-amber disabled:opacity-55"
         >
           Sim, excluir minha conta
         </button>
+        @if (!online()) {
+          <p class="text-center text-xs text-ink-faint">Excluir a conta precisa de conexão.</p>
+        }
         @if (!hasReauthToken) {
           <button
             type="button"

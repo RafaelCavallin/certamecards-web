@@ -1,5 +1,5 @@
 import { studyDayBounds } from '../study/study-day';
-import type { ReviewLogRow } from '../db/local-db.model';
+import type { ReviewLogRow } from '../db/account-db.model';
 import type { DayReviewCount, Last14DaysStats } from './stats.model';
 
 const WINDOW_DAYS = 14;

@@ -25,6 +25,8 @@ function aRuntime(): SessionRuntime {
     correct: 0,
     done: 0,
     revealedAt: null,
+    pendingWrite: Promise.resolve(),
+    lastWriteError: null,
   };
 }
 

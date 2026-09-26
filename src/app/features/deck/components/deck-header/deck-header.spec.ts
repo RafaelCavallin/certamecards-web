@@ -42,10 +42,10 @@ it('TU — emite deleted ao clicar em Excluir', () => {
   expect(handler).toHaveBeenCalledOnce();
 });
 
-it('TU — offline desabilita Zerar progresso e mostra o motivo', () => {
+it('TU — offline mantém Zerar progresso habilitado', () => {
   const fixture = setup();
   fixture.componentRef.setInput('online', false);
   fixture.detectChanges();
-  expect(queryAll(fixture, 'button')[1]?.hasAttribute('disabled')).toBe(true);
-  expect(rootText(fixture)).toContain('Isso precisa de conexão: zerar progresso.');
+  expect(queryAll(fixture, 'button')[1]?.hasAttribute('disabled')).toBe(false);
+  expect(rootText(fixture)).not.toContain('zerar progresso');
 });

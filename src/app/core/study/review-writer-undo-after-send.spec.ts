@@ -3,11 +3,12 @@ import { afterEach, expect, it } from 'vitest';
 import { CARD_STATE_REVIEW } from '../api/card-state.model';
 import type { CardState } from '../api/card-state.model';
 import type { ReviewLog } from '../api/review-log.model';
-import { LocalDb } from '../db/local-db';
+import { AccountDb } from '../db/account-db';
+import { CurrentAccountDb } from '../db/current-account-db';
 import { dailyCounts } from './daily-counts';
 import { ReviewWriter } from './review-writer';
 
-let db: LocalDb;
+let db: AccountDb;
 
 function aState(overrides: Partial<CardState> = {}): CardState {
   return {
@@ -27,7 +28,8 @@ function aLog(overrides: Partial<ReviewLog> = {}): ReviewLog {
 
 function setup(): ReviewWriter {
   TestBed.configureTestingModule({});
-  db = TestBed.inject(LocalDb);
+  db = new AccountDb('review-writer-undo-after-send-test');
+  TestBed.inject(CurrentAccountDb).set({ db, userId: 'review-writer-undo-after-send-test' });
   return TestBed.inject(ReviewWriter);
 }
 
@@ -39,29 +41,42 @@ it('TI-25 — desfazer depois do envio marca o log como anulado e enfileira a an
   const writer = setup();
   const previousState = aState({ reviewCount: 2 });
   await writer.record({ log: aLog(), state: aState({ reviewCount: 3 }) });
-  await db.outbox.clear();
+  await db.reviewOutbox.clear();
   await writer.undoLastUnsynced('log-1', 'c1', previousState);
   expect(await db.reviewLogs.get('log-1')).toMatchObject({ id: 'log-1', voided: true });
   expect(await db.cardStates.get('c1')).toMatchObject({ reviewCount: 2 });
-  const outboxItems = await db.outbox.toArray();
+  const outboxItems = await db.reviewOutbox.toArray();
   expect(outboxItems).toMatchObject([{ kind: 'void', reviewId: 'log-1', cardId: 'c1' }]);
 });
 
 it('TI-25 — desfazer depois do envio de um cartão sem estado anterior mantém o void sem estado', async () => {
   const writer = setup();
   await writer.record({ log: aLog(), state: aState({ reviewCount: 1 }) });
-  await db.outbox.clear();
+  await db.reviewOutbox.clear();
   await writer.undoLastUnsynced('log-1', 'c1', null);
   expect(await db.cardStates.get('c1')).toBeUndefined();
-  const outboxItems = await db.outbox.toArray();
+  const outboxItems = await db.reviewOutbox.toArray();
   expect(outboxItems[0]).toMatchObject({ kind: 'void', state: null });
 });
 
 it('TI-25 — a estatística diária exclui a avaliação anulada depois do envio', async () => {
   const writer = setup();
   await writer.record({ log: aLog(), state: aState({ reviewCount: 3 }) });
-  await db.outbox.clear();
+  await db.reviewOutbox.clear();
   await writer.undoLastUnsynced('log-1', 'c1', aState({ reviewCount: 2 }));
   const day = { start: new Date('2026-09-18T00:00:00Z'), end: new Date('2026-09-19T00:00:00Z') };
   expect(dailyCounts(await db.reviewLogs.toArray(), day).reviews).toBe(0);
+});
+
+it('TI-25 — desfazer com a avaliação em envio trata como enviada e enfileira a anulação', async () => {
+  const writer = setup();
+  await writer.record({ log: aLog(), state: aState({ reviewCount: 3 }) });
+  await db.reviewOutbox.toCollection().modify({ status: 'sending' });
+  await writer.undoLastUnsynced('log-1', 'c1', aState({ reviewCount: 2 }));
+  expect(await db.reviewLogs.get('log-1')).toMatchObject({ voided: true });
+  const outboxItems = await db.reviewOutbox.orderBy('seq').toArray();
+  expect(outboxItems).toMatchObject([
+    { kind: 'review', status: 'sending' },
+    { kind: 'void', reviewId: 'log-1', status: 'pending' },
+  ]);
 });

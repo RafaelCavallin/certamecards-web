@@ -5,12 +5,13 @@ import type { Card } from '../api/card.model';
 import type { Deck } from '../api/deck.model';
 import { LibraryApi } from '../api/library-api';
 import type { DeckContentPage } from '../api/library.model';
-import { LocalDb } from '../db/local-db';
+import { AccountDb } from '../db/account-db';
+import { CurrentAccountDb } from '../db/current-account-db';
 import { EventsService } from '../events/events-service';
-import { SyncService } from '../sync/sync-service';
+import { SyncCycleCoordinator } from '../sync/sync-cycle-coordinator';
 import { SubscriptionService } from './subscription-service';
 
-let db: LocalDb;
+let db: AccountDb;
 const record = vi.fn();
 
 const DECK = {
@@ -36,25 +37,32 @@ function aState(cardId: string): CardState {
 function contentPage(overrides: Partial<DeckContentPage>): DeckContentPage {
   return { cards: [], cardStates: [], nextAfter: null, hasMore: false, ...overrides };
 }
-function setup(api: Partial<Record<keyof LibraryApi, ReturnType<typeof vi.fn>>>): { service: SubscriptionService; pull: ReturnType<typeof vi.fn> } {
-  const pull = vi.fn().mockResolvedValue(undefined);
+function setup(
+  api: Partial<Record<keyof LibraryApi, ReturnType<typeof vi.fn>>>,
+): { service: SubscriptionService; runNow: ReturnType<typeof vi.fn> } {
+  const runNow = vi.fn().mockResolvedValue(undefined);
   TestBed.configureTestingModule({
-    providers: [{ provide: LibraryApi, useValue: api }, { provide: SyncService, useValue: { pull } }, { provide: EventsService, useValue: { record } }],
+    providers: [
+      { provide: LibraryApi, useValue: api },
+      { provide: SyncCycleCoordinator, useValue: { runNow } },
+      { provide: EventsService, useValue: { record } },
+    ],
   });
-  db = TestBed.inject(LocalDb);
-  return { service: TestBed.inject(SubscriptionService), pull };
+  db = new AccountDb('subscription-service-test');
+  TestBed.inject(CurrentAccountDb).set({ db, userId: 'subscription-service-test' });
+  return { service: TestBed.inject(SubscriptionService), runNow };
 }
 
 afterEach(async () => {
   await db.delete();
 });
 
-it('TI-53 — subscribe grava o snapshot paginado no Dexie e faz o pull', async () => {
+it('TI-53 — subscribe grava o snapshot paginado no Dexie e sincroniza', async () => {
   const content = vi.fn()
     .mockResolvedValueOnce(contentPage({ cards: [aCard('c1')], cardStates: [aState('c1')], nextAfter: 'c1', hasMore: true }))
     .mockResolvedValueOnce(contentPage({ cards: [aCard('c2')] }));
   const subscribe = vi.fn().mockResolvedValue({ deck: DECK, subscription: SUBSCRIPTION, restoredProgress: false });
-  const { service, pull } = setup({ subscribe, content });
+  const { service, runNow } = setup({ subscribe, content });
   const deck = await service.subscribe('d1');
   expect(deck.id).toBe('d1');
   expect(content).toHaveBeenNthCalledWith(1, 'd1', null);
@@ -63,13 +71,13 @@ it('TI-53 — subscribe grava o snapshot paginado no Dexie e faz o pull', async 
   expect(await db.cardStates.count()).toBe(1);
   expect(await db.decks.get('d1')).toBeDefined();
   expect(await db.subscriptions.get('d1')).toEqual(SUBSCRIPTION);
-  expect(pull).toHaveBeenCalledOnce();
+  expect(runNow).toHaveBeenCalledOnce();
   expect(record).toHaveBeenCalledWith('deck_subscribed', { deckId: 'd1', cardCount: 2, restoredProgress: false });
 });
 
-it('TU — cancel remove deck, cartões e estados locais e faz o pull', async () => {
+it('TU — cancel remove deck, cartões e estados locais e sincroniza', async () => {
   const unsubscribe = vi.fn().mockResolvedValue(undefined);
-  const { service, pull } = setup({ unsubscribe });
+  const { service, runNow } = setup({ unsubscribe });
   await db.decks.put(DECK);
   await db.cards.put({ ...aCard('c1'), searchText: 'f' });
   await db.cardStates.put(aState('c1'));
@@ -77,7 +85,7 @@ it('TU — cancel remove deck, cartões e estados locais e faz o pull', async ()
   expect(unsubscribe).toHaveBeenCalledWith('d1');
   expect(record).toHaveBeenCalledWith('deck_unsubscribed', { deckId: 'd1' });
   expect([await db.decks.count(), await db.cards.count(), await db.cardStates.count()]).toEqual([0, 0, 0]);
-  expect(pull).toHaveBeenCalledOnce();
+  expect(runNow).toHaveBeenCalledOnce();
 });
 
 it('TU — cancel com falha na API não apaga nada local', async () => {
@@ -88,12 +96,12 @@ it('TU — cancel com falha na API não apaga nada local', async () => {
   expect(await db.decks.count()).toBe(1);
 });
 
-it('TU — duplicate envia as escolhas, faz o pull e devolve a cópia', async () => {
+it('TU — duplicate envia as escolhas, sincroniza e devolve a cópia', async () => {
   const duplicate = vi.fn().mockResolvedValue({ deck: { ...DECK, id: 'n1' }, copiedCards: 2, carriedStates: 1, cursorHint: 9 });
-  const { service, pull } = setup({ duplicate });
+  const { service, runNow } = setup({ duplicate });
   const deck = await service.duplicate('d1', 'n1', { carryProgress: true, cancelSubscription: true });
   expect(duplicate).toHaveBeenCalledWith('d1', { id: 'n1', carryProgress: true, cancelSubscription: true });
   expect(deck.id).toBe('n1');
   expect(record).toHaveBeenCalledWith('deck_duplicated', { sourceDeckId: 'd1', mode: 'carry', cancelledSubscription: true });
-  expect(pull).toHaveBeenCalledOnce();
+  expect(runNow).toHaveBeenCalledOnce();
 });

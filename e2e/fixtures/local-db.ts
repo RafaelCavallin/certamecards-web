@@ -1,9 +1,10 @@
 import type { Page } from '@playwright/test';
+import { accountDatabaseName } from './account-db';
 
-const DATABASE_NAME = 'certamecards';
 const CARD_STATES_STORE = 'cardStates';
 export async function readLocalCardStateDue(page: Page, cardId: string): Promise<string | undefined> {
-  return page.evaluate(readDueFromIndexedDb, { databaseName: DATABASE_NAME, storeName: CARD_STATES_STORE, cardId });
+  const databaseName = await accountDatabaseName(page);
+  return page.evaluate(readDueFromIndexedDb, { databaseName, storeName: CARD_STATES_STORE, cardId });
 }
 function readDueFromIndexedDb(args: { databaseName: string; storeName: string; cardId: string }): Promise<string | undefined> {
   return new Promise((resolve, reject) => {

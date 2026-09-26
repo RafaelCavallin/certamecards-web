@@ -21,7 +21,7 @@
     }
   </div>
   <app-offline-notice [online]="online()" />
-  <button appButton type="submit" [disabled]="!online()">
+  <button appButton type="submit" [disabled]="!online() || saving()">
     {{ submitLabel() ?? (isEditing() ? 'Salvar' : 'Salvar e adicionar outro') }}
   </button>
 </form>

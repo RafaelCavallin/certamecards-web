@@ -15,13 +15,18 @@ const VIEWPORTS = [
   { name: '360', width: 360, height: 800 },
   { name: '1280', width: 1280, height: 800 },
 ];
+const ADMIN_SCREENS: readonly (readonly [route: string, name: string])[] = [
+  ['decks-oficiais', 'admin-decks-oficiais'],
+  ['apontamentos', 'admin-apontamentos'],
+  ['registro', 'admin-registro'],
+];
 
 async function shot(page: Page, name: string, size: string): Promise<void> {
   await page.screenshot({ path: `${EVIDENCE_DIR}/${name}-${size}.png`, fullPage: true });
 }
 
 async function captureAdminScreens(page: Page, size: string): Promise<void> {
-  for (const [route, name] of [['decks-oficiais', 'admin-decks-oficiais'], ['apontamentos', 'admin-apontamentos'], ['registro', 'admin-registro']]) {
+  for (const [route, name] of ADMIN_SCREENS) {
     await page.goto(`/admin/${route}`);
     await page.getByRole('heading', { level: 1 }).waitFor();
     await shot(page, name, size);

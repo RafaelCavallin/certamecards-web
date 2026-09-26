@@ -3,7 +3,7 @@ import type { CardState } from '../api/card-state.model';
 import type { Card } from '../api/card.model';
 import { DEFAULT_NEW_PER_DAY } from '../data/deck-counts';
 import { SettingsData } from '../data/settings-data';
-import { LocalDb } from '../db/local-db';
+import { CurrentAccountDb } from '../db/current-account-db';
 import { dailyCounts } from './daily-counts';
 import type { QueueInput, StudyCard, StudyDayWindow } from './queue.model';
 import type { SessionScope } from './study-session.model';
@@ -19,15 +19,16 @@ export interface SessionLoadResult {
 }
 @Injectable({ providedIn: 'root' })
 export class StudySessionLoader {
-  private readonly localDb = inject(LocalDb);
+  private readonly currentAccountDb = inject(CurrentAccountDb);
   private readonly settingsData = inject(SettingsData);
 
   async load(scope: SessionScope, now: Date): Promise<SessionLoadResult> {
+    const { db } = this.currentAccountDb.require();
     const [cards, decks, states, deviceId] = await Promise.all([
-      this.localDb.cards.toArray(),
-      this.localDb.decks.toArray(),
-      this.localDb.cardStates.toArray(),
-      this.localDb.getOrCreateDeviceId(),
+      db.cards.toArray(),
+      db.decks.toArray(),
+      db.cardStates.toArray(),
+      this.currentAccountDb.deviceId(),
     ]);
     const settings = this.settingsData.current();
     const day = studyDayBounds(now, settings?.timeZone ?? DEFAULT_TIME_ZONE);
@@ -35,7 +36,7 @@ export class StudySessionLoader {
     const activeCards = cards.filter((card) => card.deletedAt === null && deckSubject.has(card.deckId));
     const studyCards: StudyCard[] = activeCards.map((card) => toStudyCard(card, deckSubject));
     const statesById = new Map(states.map((state) => [state.cardId, state]));
-    const logs = await this.localDb.reviewLogs.where('reviewedAt').between(day.start.toISOString(), day.end.toISOString()).toArray();
+    const logs = await db.reviewLogs.where('reviewedAt').between(day.start.toISOString(), day.end.toISOString()).toArray();
     const counts = dailyCounts(logs, day);
     const newLimit = Math.max(0, (settings?.newPerDay ?? DEFAULT_NEW_PER_DAY) - counts.newCards);
     const reviewLimit = Math.max(0, (settings?.reviewsPerDay ?? DEFAULT_REVIEWS_PER_DAY) - counts.reviews);

@@ -1,8 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import type { CardState } from '../api/card-state.model';
 import type { ReviewLog } from '../api/review-log.model';
-import { LocalDb } from '../db/local-db';
-import type { OutboxReviewItem } from '../db/local-db.model';
+import { CurrentAccountDb } from '../db/current-account-db';
+import type { AccountDb } from '../db/account-db';
+import type { ReviewLogRow, ReviewOutboxReviewItem } from '../db/account-db.model';
+import { HybridLogicalClock } from '../sync/hybrid-logical-clock';
 
 export interface ReviewWriteEntry {
   readonly log: ReviewLog;
@@ -15,36 +17,53 @@ export interface UndoContext {
 }
 @Injectable({ providedIn: 'root' })
 export class ReviewWriter {
-  private readonly localDb = inject(LocalDb);
+  private readonly currentAccountDb = inject(CurrentAccountDb);
 
   async record(entry: ReviewWriteEntry): Promise<void> {
-    const tables = [this.localDb.reviewLogs, this.localDb.cardStates, this.localDb.outbox];
-    await this.localDb.transaction('rw', tables, async () => {
-      await this.localDb.reviewLogs.put({ ...entry.log, voided: false });
-      await this.localDb.cardStates.put({ ...entry.state, contentUpdateNote: null, contentUpdatedAt: null });
-      await this.localDb.outbox.add({ kind: 'review', log: entry.log, state: entry.state });
+    const { db } = this.currentAccountDb.require();
+    const tables = [db.reviewLogs, db.cardStates, db.reviewOutbox, db.meta];
+    await db.transaction('rw', tables, async () => {
+      const observedServerTime = await db.getServerTime();
+      const log = await this.stampCanonicalLog(db, entry.log, observedServerTime);
+      await db.reviewLogs.put(log);
+      await db.cardStates.put({ ...entry.state, contentUpdateNote: null, contentUpdatedAt: null });
+      await db.reviewOutbox.add({ kind: 'review', log, state: entry.state, observedServerTime, status: 'pending', retryAt: null });
     });
   }
 
   async undoLastUnsynced(logId: string, cardId: string, previousState: CardState | null): Promise<void> {
-    const tables = [this.localDb.reviewLogs, this.localDb.cardStates, this.localDb.outbox];
-    await this.localDb.transaction('rw', tables, async () => {
-      const log = await this.localDb.reviewLogs.get(logId);
+    const { db } = this.currentAccountDb.require();
+    const tables = [db.reviewLogs, db.cardStates, db.reviewOutbox];
+    await db.transaction('rw', tables, async () => {
+      const log = await db.reviewLogs.get(logId);
       if (log === undefined) {
         return;
       }
       const context: UndoContext = { logId, cardId, previousState };
-      const outboxItem = await this.findReviewOutboxItem(logId);
-      if (outboxItem !== undefined) {
-        await this.undoBeforeSend(context, outboxItem.seq);
+      const outboxItem = await this.findReviewOutboxItem(db, logId);
+      if (outboxItem !== undefined && outboxItem.status !== 'sending') {
+        await this.undoBeforeSend(db, context, outboxItem.seq);
         return;
       }
-      await this.undoAfterSend(context);
+      await this.undoAfterSend(db, context);
     });
   }
 
-  private async findReviewOutboxItem(logId: string): Promise<OutboxReviewItem | undefined> {
-    const match = await this.localDb.outbox
+  private async stampCanonicalLog(db: AccountDb, log: ReviewLog, observedServerTime: string): Promise<ReviewLogRow> {
+    const clock = new HybridLogicalClock(db);
+    const clockState = await clock.advance(Date.now(), observedServerTime);
+    return {
+      ...log,
+      voided: false,
+      eventAt: clockState.wallTime,
+      eventCounter: clockState.logicalCounter,
+      eventDeviceId: log.deviceId,
+      operationId: log.id,
+    };
+  }
+
+  private async findReviewOutboxItem(db: AccountDb, logId: string): Promise<ReviewOutboxReviewItem | undefined> {
+    const match = await db.reviewOutbox
       .where('kind')
       .equals('review')
       .filter((item) => item.kind === 'review' && item.log.id === logId)
@@ -52,31 +71,33 @@ export class ReviewWriter {
     return match?.kind === 'review' ? match : undefined;
   }
 
-  private async undoBeforeSend(context: UndoContext, outboxSeq: number | undefined): Promise<void> {
-    await this.localDb.reviewLogs.delete(context.logId);
-    await this.restoreCardState(context.cardId, context.previousState);
+  private async undoBeforeSend(db: AccountDb, context: UndoContext, outboxSeq: number | undefined): Promise<void> {
+    await db.reviewLogs.delete(context.logId);
+    await this.restoreCardState(db, context.cardId, context.previousState);
     if (outboxSeq !== undefined) {
-      await this.localDb.outbox.delete(outboxSeq);
+      await db.reviewOutbox.delete(outboxSeq);
     }
   }
 
-  private async undoAfterSend(context: UndoContext): Promise<void> {
-    await this.localDb.reviewLogs.update(context.logId, { voided: true });
-    await this.restoreCardState(context.cardId, context.previousState);
-    await this.localDb.outbox.add({
+  private async undoAfterSend(db: AccountDb, context: UndoContext): Promise<void> {
+    await db.reviewLogs.update(context.logId, { voided: true });
+    await this.restoreCardState(db, context.cardId, context.previousState);
+    await db.reviewOutbox.add({
       kind: 'void',
       reviewId: context.logId,
       voidedAt: new Date().toISOString(),
       cardId: context.cardId,
       state: context.previousState,
+      status: 'pending',
+      retryAt: null,
     });
   }
 
-  private async restoreCardState(cardId: string, previousState: CardState | null): Promise<void> {
+  private async restoreCardState(db: AccountDb, cardId: string, previousState: CardState | null): Promise<void> {
     if (previousState === null) {
-      await this.localDb.cardStates.delete(cardId);
+      await db.cardStates.delete(cardId);
       return;
     }
-    await this.localDb.cardStates.put(previousState);
+    await db.cardStates.put(previousState);
   }
 }

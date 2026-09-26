@@ -5,6 +5,7 @@ import { extractApiError } from '../../../core/api/api-error.model';
 import { AuthApi } from '../../../core/api/auth-api';
 import { AUTH_PATHS, TERMS_CURRENT_VERSION } from '../../../core/auth/auth-constants';
 import { registerErrorMessage } from './register-errors';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-register-page',
@@ -16,6 +17,7 @@ export class RegisterPage {
   private readonly router = inject(Router);
 
   protected readonly googleAuthorizationUrl = `${AUTH_PATHS.googleAuthorization}?intent=login`;
+  protected readonly googleSignInEnabled = environment.googleSignInEnabled;
   protected readonly model = signal({ email: '', password: '', displayName: '', acceptedTerms: false });
   protected readonly registerForm = form(this.model, (schemaPath) => {
     required(schemaPath.email, { message: 'Informe o e-mail.' });

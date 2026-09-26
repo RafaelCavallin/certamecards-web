@@ -41,9 +41,8 @@
         <option value="auto">Automático</option>
       </select>
     </div>
-    <app-offline-notice [online]="connectivity.online()" />
     <div class="flex gap-2">
-      <button appButton type="submit" [disabled]="!connectivity.online() || submitting()">Salvar</button>
+      <button appButton type="submit" [disabled]="submitting()">Salvar</button>
       <button appButton variant="ghost" type="button" (click)="onCancel()">Cancelar</button>
     </div>
   </form>

@@ -1,30 +1,31 @@
 import { Injectable, inject } from '@angular/core';
 import { EventsApi } from '../api/events-api';
 import { ConnectivityStore } from '../connectivity/connectivity-store';
-import { LocalDb } from '../db/local-db';
+import type { AccountDb } from '../db/account-db';
+import { CurrentAccountDb } from '../db/current-account-db';
 import { registerSyncTriggers } from '../sync/sync-triggers';
 import { EVENTS_FLUSH_POLL_MS, MAX_EVENTS_PER_BATCH, MAX_LOCAL_EVENTS } from './events-constants';
 import type { ProductEvent, ProductEventName } from './event.model';
 
 @Injectable({ providedIn: 'root' })
 export class EventsService {
-  private readonly localDb = inject(LocalDb);
+  private readonly currentAccountDb = inject(CurrentAccountDb);
   private readonly eventsApi = inject(EventsApi);
   private readonly connectivity = inject(ConnectivityStore);
   private flushing: Promise<void> | null = null;
 
   constructor() {
-    registerSyncTriggers(
-      { onOnline: () => void this.flush(), onVisible: () => void this.flush(), onPoll: () => void this.flush() },
-      { window, document },
-      EVENTS_FLUSH_POLL_MS,
-    );
+    registerSyncTriggers({ onTrigger: () => void this.flush() }, { window, document }, EVENTS_FLUSH_POLL_MS);
   }
 
   async record(name: ProductEventName, props: Record<string, unknown> = {}): Promise<void> {
+    const db = this.currentAccountDb.current()?.db;
+    if (db === undefined) {
+      return;
+    }
     const event: ProductEvent = { id: crypto.randomUUID(), name, props, occurredAt: new Date().toISOString() };
-    await this.localDb.events.add(event);
-    await this.trimToLimit();
+    await db.events.add(event);
+    await this.trimToLimit(db);
     void this.flush();
   }
 
@@ -41,21 +42,25 @@ export class EventsService {
   }
 
   private async runFlush(): Promise<void> {
-    const batch = await this.localDb.events.orderBy('occurredAt').limit(MAX_EVENTS_PER_BATCH).toArray();
+    const db = this.currentAccountDb.current()?.db;
+    if (db === undefined) {
+      return;
+    }
+    const batch = await db.events.orderBy('occurredAt').limit(MAX_EVENTS_PER_BATCH).toArray();
     if (batch.length === 0) {
       return;
     }
     await this.eventsApi.submit(batch);
-    await this.localDb.events.bulkDelete(batch.map((event) => event.id));
+    await db.events.bulkDelete(batch.map((event) => event.id));
   }
 
-  private async trimToLimit(): Promise<void> {
-    const count = await this.localDb.events.count();
+  private async trimToLimit(db: AccountDb): Promise<void> {
+    const count = await db.events.count();
     const overflow = count - MAX_LOCAL_EVENTS;
     if (overflow <= 0) {
       return;
     }
-    const oldest = await this.localDb.events.orderBy('occurredAt').limit(overflow).primaryKeys();
-    await this.localDb.events.bulkDelete(oldest);
+    const oldest = await db.events.orderBy('occurredAt').limit(overflow).primaryKeys();
+    await db.events.bulkDelete(oldest);
   }
 }

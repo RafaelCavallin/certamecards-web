@@ -5,7 +5,7 @@ import { expect, it } from 'vitest';
 import { anAdmin, setupAdminsPage } from './admins-page-harness';
 import { AdminsPage } from './admins-page';
 
-it('TU-09 — lista os administradores', async () => {
+it('lista os administradores', async () => {
   setupAdminsPage([anAdmin({ displayName: 'Ana' })]);
   const fixture = TestBed.createComponent(AdminsPage);
   fixture.detectChanges();
@@ -14,7 +14,7 @@ it('TU-09 — lista os administradores', async () => {
   expect(textContent(fixture, 'table')).toContain('Ana');
 });
 
-it('TU-09 — concede o papel por e-mail e adiciona à lista', async () => {
+it('concede o papel por e-mail e adiciona à lista', async () => {
   const { grantAdmin } = setupAdminsPage([]);
   grantAdmin.mockResolvedValue(anAdmin({ id: '2', email: 'bruno@exemplo.com', displayName: 'Bruno' }));
   const fixture = TestBed.createComponent(AdminsPage);
@@ -28,7 +28,7 @@ it('TU-09 — concede o papel por e-mail e adiciona à lista', async () => {
   expect(textContent(fixture, 'table')).toContain('Bruno');
 });
 
-it('TU-09 — e-mail sem conta mostra a mensagem de erro', async () => {
+it('e-mail sem conta mostra a mensagem de erro', async () => {
   const { grantAdmin } = setupAdminsPage([]);
   grantAdmin.mockRejectedValue(new HttpErrorResponse({ status: 404, error: { code: 'not_found', detail: 'x' } }));
   const fixture = TestBed.createComponent(AdminsPage);

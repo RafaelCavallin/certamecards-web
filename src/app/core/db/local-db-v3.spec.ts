@@ -27,7 +27,7 @@ it('TU — migração da v2 para a v3 preserva os dados locais e cria as tabelas
   expect(await db.errorReports.count()).toBe(1);
 });
 
-it('TI-28 — clearForResync apaga inscrições e apontamentos locais', async () => {
+it('clearForResync apaga inscrições e apontamentos locais', async () => {
   db = new LocalDb();
   await db.subscriptions.put(SUBSCRIPTION);
   await db.errorReports.put({ cardId: 'c1', reportedAt: '2026-09-19T00:00:00Z' });
@@ -36,7 +36,7 @@ it('TI-28 — clearForResync apaga inscrições e apontamentos locais', async ()
   expect(await db.errorReports.count()).toBe(0);
 });
 
-it('TI-28 — clearAllLocalData apaga inscrições e apontamentos locais', async () => {
+it('clearAllLocalData apaga inscrições e apontamentos locais', async () => {
   db = new LocalDb();
   await db.subscriptions.put(SUBSCRIPTION);
   await db.errorReports.put({ cardId: 'c1', reportedAt: '2026-09-19T00:00:00Z' });

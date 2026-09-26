@@ -3,7 +3,7 @@
     <div class="flex flex-wrap items-center justify-between gap-4">
       <h1 class="font-serif text-4xl text-ink">{{ greeting() }}{{ firstName() ? ', ' + firstName() : '' }}</h1>
       <div class="flex flex-wrap items-center gap-3">
-        <app-sync-indicator [status]="syncService.status()" [pendingCount]="syncService.pendingCount()" />
+        <app-sync-indicator [status]="syncService.status()" [pendingCount]="syncService.pendingCount()" (opened)="onOpenSync()" />
         <app-library-button label="Biblioteca" />
         <button appButton variant="ghost" size="sm" type="button" (click)="settingsOpen.set(true)">Ajustes</button>
         <app-sign-out-button />

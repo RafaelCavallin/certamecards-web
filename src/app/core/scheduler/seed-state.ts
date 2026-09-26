@@ -1,5 +1,5 @@
 import type { CardState } from '../api/card-state.model';
-import type { ReviewLogRow } from '../db/local-db.model';
+import type { ReviewLogRow } from '../db/account-db.model';
 
 type SeedFields = Omit<CardState, 'cardId' | 'reviewCount' | 'suspended' | 'contentUpdateNote' | 'contentUpdatedAt' | 'changeSeq'>;
 const NUMERIC_FIELDS = ['state', 'stability', 'difficulty', 'reps', 'lapses', 'learningSteps', 'scheduledDays'] as const;

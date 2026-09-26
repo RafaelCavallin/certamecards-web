@@ -7,6 +7,7 @@ import { DeckPage } from './pages/deck-page';
 
 const SUBJECT_NAME = 'Direito Constitucional';
 const CARD_COUNT = 5;
+const LARGE_DECK_CARDS = 30;
 
 test('E2E-02 — criar deck e cartões com Ctrl+Enter', async ({ page, candidate }) => {
   await loginAndReachHome(page, candidate.email, candidate.password);
@@ -74,4 +75,17 @@ test('E2E-09 — zerar progresso e excluir deck', async ({ page, browser, candid
   await secondPage.reload();
   await expect(secondPage.getByRole('button', { name: 'Seed due_cards', exact: true })).toHaveCount(0);
   await secondContext.close();
+});
+
+test('lista de cartões de um deck grande rola até o último cartão sob a CSP de produção', async ({ page, candidate }) => {
+  const seed = await seedForCandidate(candidate, 'large_deck', { count: LARGE_DECK_CARDS });
+  await loginAndReachHome(page, candidate.email, candidate.password);
+  await page.goto(`/decks/${seed.deckId}`);
+  const deckPage = new DeckPage(page);
+  await expect(deckPage.cardRow('Frente 0')).toBeVisible();
+  const lastRow = deckPage.cardRow(`Frente ${LARGE_DECK_CARDS - 1}`);
+  const viewport = page.locator('cdk-virtual-scroll-viewport');
+  await viewport.evaluate((element) => element.scrollTo({ top: element.scrollHeight }));
+  await expect.poll(() => viewport.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  await expect(lastRow).toBeVisible();
 });

@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import type { LocalDb } from '../db/local-db';
+import type { AccountDb } from '../db/account-db';
 import type { StudySessionStore } from './study-session-store';
 import { setupStudySessionStore } from './study-session-store-test-support';
 
-let db: LocalDb;
+let db: AccountDb;
 let store: StudySessionStore;
 
 beforeEach(async () => {
@@ -22,6 +22,7 @@ it('TU-15 — undo restaura cartão, fila, contadores e o histórico local', asy
   const firstCardId = store.current()?.ref.cardId;
   store.reveal();
   await store.rate(3);
+  await store.flushPendingWrites();
   expect(store.done()).toBe(1);
   expect(await db.reviewLogs.count()).toBe(1);
   await store.undo();
@@ -31,7 +32,7 @@ it('TU-15 — undo restaura cartão, fila, contadores e o histórico local', asy
   expect(store.canUndo()).toBe(false);
   expect(await db.reviewLogs.count()).toBe(0);
   expect(await db.cardStates.get(firstCardId ?? '')).toMatchObject({ reviewCount: 3 });
-  expect(await db.outbox.count()).toBe(0);
+  expect(await db.reviewOutbox.count()).toBe(0);
 });
 
 it('TU-16 — cronômetro encerra a sessão na avaliação seguinte ao zerar, sem contar a pausa', async () => {

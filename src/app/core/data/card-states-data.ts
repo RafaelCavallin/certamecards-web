@@ -1,28 +1,26 @@
-import { Injectable, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { liveQuery } from 'dexie';
-import { from } from 'rxjs';
+import { Injectable, Injector, inject } from '@angular/core';
 import type { CardState } from '../api/card-state.model';
-import { CardsApi } from '../api/cards-api';
-import { LocalDb } from '../db/local-db';
+import { CurrentAccountDb } from '../db/current-account-db';
+import type { CurrentAccount } from '../db/current-account-db';
+import { CardSuspensionWriter } from '../sync/card-suspension-writer';
+import { accountLiveSignal } from './account-live-query';
 
 @Injectable({ providedIn: 'root' })
 export class CardStatesData {
-  private readonly localDb = inject(LocalDb);
-  private readonly cardsApi = inject(CardsApi);
+  private readonly currentAccountDb = inject(CurrentAccountDb);
+  private readonly suspensionWriter = inject(CardSuspensionWriter);
+  private readonly injector = inject(Injector);
 
-  readonly byCardId = toSignal(from(liveQuery(() => this.fetchAll())), {
-    initialValue: new Map<string, CardState>(),
+  readonly byCardId = accountLiveSignal(this.injector, this.currentAccountDb, {
+    query: (account) => this.fetchAll(account), initialValue: new Map<string, CardState>(),
   });
 
-  async setSuspension(cardId: string, suspended: boolean): Promise<CardState> {
-    const state = await this.cardsApi.setSuspension(cardId, suspended);
-    await this.localDb.cardStates.put(state);
-    return state;
+  setSuspension(cardId: string, suspended: boolean): Promise<CardState> {
+    return this.suspensionWriter.execute({ kind: 'card_suspension', cardId, suspended });
   }
 
-  private async fetchAll(): Promise<Map<string, CardState>> {
-    const states = await this.localDb.cardStates.toArray();
+  private async fetchAll(account: CurrentAccount): Promise<Map<string, CardState>> {
+    const states = await account.db.cardStates.toArray();
     return new Map(states.map((state) => [state.cardId, state]));
   }
 }

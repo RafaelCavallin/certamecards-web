@@ -32,7 +32,7 @@ function rawDeckCounts(deck: Deck, input: DeckCountsInput): RawDeckCounts {
   const freshAvailable = deckCards.filter((card) => isFresh(input.states.get(card.id))).length;
   return { deck, due, freshAvailable };
 }
-function isFresh(state: CardState | undefined): boolean {
+export function isFresh(state: CardState | undefined): boolean {
   return state === undefined || state.state === CARD_STATE_NEW;
 }
 function isDue(state: CardState | undefined, now: Date): boolean {

@@ -8,6 +8,7 @@ import { StudySessionPage } from './pages/study-session-page';
 const SAMPLE_SIZE = 30;
 const P95_BUDGET_MS = 100;
 const P95_INDEX = Math.floor(SAMPLE_SIZE * 0.95) - 1;
+const SYNC_TIMEOUT_MS = 30_000;
 
 function percentile95(durationsMs: readonly number[]): number {
   const sorted = [...durationsMs].sort((a, b) => a - b);
@@ -36,9 +37,11 @@ async function collectSamples(page: Page, session: StudySessionPage): Promise<nu
 test('E2E-15 — tempo do próximo cartão fica em até 100 ms (p95), com e sem rede', async ({ page, candidate }) => {
   test.setTimeout(120_000);
   await seedForCandidate(candidate, 'large_deck', { count: 5000 });
-  await seedForCandidate(candidate, 'due_cards', { count: SAMPLE_SIZE });
+  await seedForCandidate(candidate, 'due_cards', { count: SAMPLE_SIZE * 2 });
   await loginAndReachHome(page, candidate.email, candidate.password);
-  await new DashboardPage(page).startSessionButton.click();
+  const dashboard = new DashboardPage(page);
+  await expect(dashboard.syncStatus).toHaveText('Sincronizado', { timeout: SYNC_TIMEOUT_MS });
+  await dashboard.startSessionButton.click();
   const session = new StudySessionPage(page);
   await expect(session.region).toBeVisible();
 

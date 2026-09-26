@@ -5,7 +5,7 @@ import { expect, it } from 'vitest';
 import { aSubject, setupSubjectsPage } from './subjects-page-harness';
 import { SubjectsPage } from './subjects-page';
 
-it('TU-06 — lista as matérias com situação e número de decks', async () => {
+it('lista as matérias com situação e número de decks', async () => {
   setupSubjectsPage([aSubject({ name: 'Direito Penal', deckCount: 3 })]);
   const fixture = TestBed.createComponent(SubjectsPage);
   fixture.detectChanges();
@@ -15,7 +15,7 @@ it('TU-06 — lista as matérias com situação e número de decks', async () =>
   expect(textContent(fixture, 'table')).toContain('3');
 });
 
-it('TU-06 — cria uma matéria e adiciona à lista', async () => {
+it('cria uma matéria e adiciona à lista', async () => {
   const { createSubject } = setupSubjectsPage([]);
   createSubject.mockResolvedValue(aSubject({ id: '2', name: 'Direito Tributário', deckCount: 0 }));
   const fixture = TestBed.createComponent(SubjectsPage);
@@ -29,7 +29,7 @@ it('TU-06 — cria uma matéria e adiciona à lista', async () => {
   expect(textContent(fixture, 'table')).toContain('Direito Tributário');
 });
 
-it('TU-06 — nome duplicado mostra a mensagem de erro', async () => {
+it('nome duplicado mostra a mensagem de erro', async () => {
   const { createSubject } = setupSubjectsPage([]);
   createSubject.mockRejectedValue(
     new HttpErrorResponse({ status: 409, error: { code: 'subject_name_taken', detail: 'x' } }),

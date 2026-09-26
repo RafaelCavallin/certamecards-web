@@ -15,12 +15,13 @@ export class CardForm {
   readonly initial = input<CardFormModel | null>(null);
   readonly online = input(true);
   readonly keepOnSave = input(false);
+  readonly saving = input(false);
   readonly submitLabel = input<string | null>(null);
   readonly saved = output<CardFormModel>();
 
   protected readonly isEditing = (): boolean => this.initial() !== null;
   protected readonly model = signal(emptyCardFormModel());
-  protected readonly cardForm = buildCardForm(this.model);
+  protected readonly cardForm = buildCardForm(this.model, () => this.saving());
 
   constructor() {
     effect(() => this.model.set(this.initial() ?? emptyCardFormModel()));
@@ -38,6 +39,9 @@ export class CardForm {
   }
 
   protected onSubmit(): void {
+    if (this.saving()) {
+      return;
+    }
     // eslint-disable-next-line @typescript-eslint/require-await -- submit() exige uma action assíncrona (Promise<TreeValidationResult>)
     void submit(this.cardForm, async () => {
       const value = this.model();

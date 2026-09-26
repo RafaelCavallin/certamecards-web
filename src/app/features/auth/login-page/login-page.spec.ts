@@ -69,3 +69,12 @@ it('TU — bloqueio de login mostra o tempo restante', async () => {
   fixture.detectChanges();
   expect(textContent(fixture, '[role="alert"][aria-live]')).toContain('9 minutos');
 });
+
+it('TU — o acesso com o Google fica oculto nesta versão', () => {
+  setup();
+  const fixture = TestBed.createComponent(LoginPage);
+  fixture.detectChanges();
+  const html = (fixture.nativeElement as HTMLElement).innerHTML;
+  expect(html).not.toContain('Google');
+  expect(html).not.toContain('oauth2/authorization');
+});

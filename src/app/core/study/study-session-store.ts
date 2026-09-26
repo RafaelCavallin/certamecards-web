@@ -62,15 +62,19 @@ export class StudySessionStore {
   togglePause(now: Date): void {
     this.session?.timer.togglePause(now);
   }
-  async rate(rating: Rating): Promise<void> {
+  rate(rating: Rating): Promise<void> {
     const { session } = this;
     const current = this.signals.current();
     if (session === null || current === null || !this.signals.revealed()) {
-      return;
+      return Promise.resolve();
     }
-    const outcome = await rateSession({ recorder: this.recorder, session, current, rating });
+    const outcome = rateSession({ recorder: this.recorder, session, current, rating });
     setCurrent(this.signals, session, outcome.nextCurrent);
     this.signals.finishedReason.set(outcome.finishedReason);
+    return Promise.resolve();
+  }
+  async flushPendingWrites(): Promise<void> {
+    await this.session?.pendingWrite;
   }
   async undo(): Promise<void> {
     const { session } = this;

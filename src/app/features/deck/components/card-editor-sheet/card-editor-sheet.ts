@@ -1,5 +1,5 @@
 import { SlicePipe } from '@angular/common';
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { CardsApi } from '../../../../core/api/cards-api';
 import type { CardHistory } from '../../../../core/api/cards-api';
 import { CardStatesData } from '../../../../core/data/card-states-data';
@@ -13,6 +13,7 @@ import { Sheet } from '../../../../shared/ui/sheet/sheet';
 import type { CardFormModel } from '../../../../shared/ui/card-form/card-content-form';
 import { CardForm } from '../../../../shared/ui/card-form/card-form';
 import { summarizeCardHistory } from '../../deck-page/card-history-summary';
+import { cardFormErrorMessage } from './card-form-errors';
 
 @Component({
   selector: 'app-card-editor-sheet',
@@ -23,6 +24,7 @@ export class CardEditorSheet {
   private readonly cardsData = inject(CardsData);
   private readonly cardStatesData = inject(CardStatesData);
   private readonly cardsApi = inject(CardsApi);
+  private readonly form = viewChild(CardForm);
   protected readonly connectivity = inject(ConnectivityStore);
 
   readonly deckId = input.required<string>();
@@ -38,6 +40,8 @@ export class CardEditorSheet {
   });
   protected readonly deleteConfirmOpen = signal(false);
   protected readonly history = signal<ReturnType<typeof summarizeCardHistory> | null>(null);
+  protected readonly errorMessage = signal<string | null>(null);
+  protected readonly saving = signal(false);
 
   constructor() {
     effect(() => {
@@ -50,15 +54,23 @@ export class CardEditorSheet {
   }
 
   protected async onSave(value: CardFormModel): Promise<void> {
+    this.errorMessage.set(null);
     const content = { front: value.front, back: value.back, source: value.source === '' ? null : value.source };
     const editingId = this.cardId();
-    if (editingId === null) {
-      await this.cardsData.create(this.deckId(), { id: generateUuidV7(), type: 'basic', ...content });
-      return;
+    this.saving.set(true);
+    try {
+      if (editingId === null) {
+        await this.cardsData.create(this.deckId(), { id: generateUuidV7(), type: 'basic', ...content });
+        this.form()?.clear();
+        return;
+      }
+      await this.cardsData.update(editingId, content);
+      this.closed.emit();
+    } catch (error) {
+      this.errorMessage.set(cardFormErrorMessage(error));
+    } finally {
+      this.saving.set(false);
     }
-    const version = this.card()?.version ?? 1;
-    await this.cardsData.update(editingId, version, content);
-    this.closed.emit();
   }
 
   protected onDelete(): void {
@@ -70,8 +82,7 @@ export class CardEditorSheet {
     if (editingId === null) {
       return;
     }
-    const version = this.card()?.version ?? 1;
-    await this.cardsData.delete(editingId, version);
+    await this.cardsData.delete(editingId);
     this.deleteConfirmOpen.set(false);
     this.closed.emit();
   }
@@ -89,6 +100,7 @@ export class CardEditorSheet {
   }
 
   protected onClose(): void {
+    this.errorMessage.set(null);
     this.closed.emit();
   }
 

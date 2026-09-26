@@ -39,7 +39,7 @@ function aState(overrides: Partial<CardState>): CardState {
   };
 }
 
-it('TU-12 — conta cada categoria de cartão do deck', () => {
+it('conta cada categoria de cartão do deck', () => {
   const cards = [aCardRow('c1'), aCardRow('c2'), aCardRow('c3'), aCardRow('c4'), aCardRow('c5')];
   const states = new Map<string, CardState>([
     ['c2', aState({ state: 1 })],
@@ -51,7 +51,7 @@ it('TU-12 — conta cada categoria de cartão do deck', () => {
   expect(counters).toEqual({ total: 5, fresh: 1, learning: 1, review: 3, suspended: 1, dueToday: 2 });
 });
 
-it('TU-11 — cartão com progresso zerado conta como novo, não como para revisar', () => {
+it('cartão com progresso zerado conta como novo, não como para revisar', () => {
   const cards = [aCardRow('c1')];
   const states = new Map<string, CardState>([['c1', aState({ state: 0, due: NOW.toISOString() })]]);
   const counters = computeDeckCardCounters(cards, states, NOW);

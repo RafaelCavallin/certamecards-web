@@ -57,7 +57,7 @@ function setup(): {
   return { fixture, decksData, navigate };
 }
 
-it('TU-11 — confirmar zerar progresso aciona resetProgress', async () => {
+it('confirmar zerar progresso aciona resetProgress', async () => {
   const { fixture, decksData } = setup();
   headerButton(fixture, 'Zerar progresso').click();
   fixture.detectChanges();
@@ -67,13 +67,13 @@ it('TU-11 — confirmar zerar progresso aciona resetProgress', async () => {
   expect(decksData.resetProgress).toHaveBeenCalledWith('d1');
 });
 
-it('TU-10 — confirmar excluir deck aciona delete e navega para o painel', async () => {
+it('confirmar excluir deck aciona delete e navega para o painel', async () => {
   const { fixture, decksData, navigate } = setup();
   headerButton(fixture, 'Excluir').click();
   fixture.detectChanges();
   const dialog = dialogByTitle(fixture, 'Excluir deck');
   dialog.querySelectorAll('button')[1]?.click();
   await fixture.whenStable();
-  expect(decksData.delete).toHaveBeenCalledWith('d1', 1);
+  expect(decksData.delete).toHaveBeenCalledWith('d1');
   expect(navigate).toHaveBeenCalledWith(['/']);
 });

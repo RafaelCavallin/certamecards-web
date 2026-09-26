@@ -2,49 +2,63 @@ import { Injectable, inject } from '@angular/core';
 import type { CardState } from '../api/card-state.model';
 import type { CardReviewHistory } from '../api/sync.model';
 import { SyncApi } from '../api/sync-api';
-import { LocalDb } from '../db/local-db';
+import type { AccountDb } from '../db/account-db';
 import { SchedulerService } from '../scheduler/scheduler-service';
 
 @Injectable({ providedIn: 'root' })
 export class StaleResolver {
-  private readonly localDb = inject(LocalDb);
   private readonly syncApi = inject(SyncApi);
   private readonly scheduler = inject(SchedulerService);
 
-  async resolve(cardIds: readonly string[]): Promise<void> {
+  async resolve(db: AccountDb, cardIds: readonly string[]): Promise<void> {
     for (const cardId of cardIds) {
-      await this.resolveCard(cardId);
+      await this.resolveCard(db, cardId);
     }
   }
 
-  private async resolveCard(cardId: string): Promise<void> {
-    const history = await this.syncApi.cardReviews(cardId);
-    await this.mergeHistory(history);
-    const logs = await this.localDb.reviewLogs.where('cardId').equals(cardId).toArray();
+  private async resolveCard(db: AccountDb, cardId: string): Promise<void> {
+    const history = await this.fetchFullHistory(cardId);
+    await this.mergeHistory(db, cardId, history);
+    const logs = await db.reviewLogs.where('cardId').equals(cardId).toArray();
     const state = this.scheduler.replay(logs);
     if (state === null) {
       return;
     }
-    await this.applyResolvedState(cardId, state);
+    await this.applyResolvedState(db, cardId, state);
   }
 
-  private async mergeHistory(history: CardReviewHistory): Promise<void> {
-    const tables = [this.localDb.reviewLogs];
-    await this.localDb.transaction('rw', tables, async () => {
-      await this.localDb.reviewLogs.bulkPut(history.reviewLogs.map((log) => ({ ...log, voided: false })));
+  private async fetchFullHistory(cardId: string): Promise<CardReviewHistory> {
+    const reviewLogs: CardReviewHistory['reviewLogs'][number][] = [];
+    const reviewVoids: CardReviewHistory['reviewVoids'][number][] = [];
+    let cursor: string | null = null;
+    let hasMore = true;
+    while (hasMore) {
+      const page = await this.syncApi.cardReviews(cardId, cursor);
+      reviewLogs.push(...page.reviewLogs);
+      reviewVoids.push(...page.reviewVoids);
+      ({ nextCursor: cursor, hasMore } = page);
+    }
+    return { reviewLogs, reviewVoids, nextCursor: null, hasMore: false };
+  }
+
+  private async mergeHistory(db: AccountDb, cardId: string, history: CardReviewHistory): Promise<void> {
+    const tables = [db.reviewLogs, db.reviewVoids];
+    await db.transaction('rw', tables, async () => {
+      await db.reviewLogs.bulkPut(history.reviewLogs.map((log) => ({ ...log, voided: false })));
       for (const voidItem of history.reviewVoids) {
-        await this.localDb.reviewLogs.update(voidItem.reviewId, { voided: true });
+        await db.reviewLogs.update(voidItem.reviewId, { voided: true });
+        await db.reviewVoids.put({ reviewId: voidItem.reviewId, voidedAt: voidItem.voidedAt, cardId });
       }
     });
   }
 
-  private async applyResolvedState(cardId: string, replayed: CardState): Promise<void> {
-    const tables = [this.localDb.cardStates, this.localDb.outbox];
-    await this.localDb.transaction('rw', tables, async () => {
-      const existing = await this.localDb.cardStates.get(cardId);
+  private async applyResolvedState(db: AccountDb, cardId: string, replayed: CardState): Promise<void> {
+    const tables = [db.cardStates, db.reviewOutbox];
+    await db.transaction('rw', tables, async () => {
+      const existing = await db.cardStates.get(cardId);
       const state: CardState = { ...replayed, cardId, suspended: existing?.suspended ?? false };
-      await this.localDb.cardStates.put(state);
-      await this.localDb.outbox.add({ kind: 'state', cardId, state });
+      await db.cardStates.put(state);
+      await db.reviewOutbox.add({ kind: 'state', cardId, state, status: 'pending', retryAt: null });
     });
   }
 }

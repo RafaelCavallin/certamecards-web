@@ -2,6 +2,7 @@ import type { CardState } from '../../../core/api/card-state.model';
 import { CARD_STATE_LEARNING, CARD_STATE_RELEARNING, CARD_STATE_REVIEW } from '../../../core/api/card-state.model';
 import type { CardRow } from '../../../core/db/local-db.model';
 import { isLeech } from '../../../core/data/card-flags';
+import { isFresh } from '../../../core/data/deck-counts';
 import { normalizeText } from '../../../shared/i18n/normalize-text';
 import type { CardStateFilter } from '../components/card-search/card-search';
 import type { CardListRow } from '../components/card-list/card-list.model';
@@ -27,7 +28,7 @@ function matchesStateFilter(state: CardState | undefined, filter: CardStateFilte
     return true;
   }
   if (filter === 'new') {
-    return state === undefined;
+    return isFresh(state);
   }
   if (filter === 'suspended') {
     return state?.suspended === true;

@@ -1,0 +1,35 @@
+<main class="mx-auto flex max-w-[720px] flex-col gap-8 px-6 py-12">
+  <header class="space-y-3">
+    <h1 class="font-serif text-4xl text-ink">Sincronização</h1>
+    <app-sync-indicator [status]="statusStore.status()" [pendingCount]="statusStore.pendingCount()" />
+    <p class="text-ink-muted">{{ connectionLine() }}</p>
+  </header>
+  <section class="space-y-3 border-y border-line py-6" aria-label="Detalhes da sincronização">
+    <p class="text-ink">{{ pendingLine() }}</p>
+    <p class="text-ink-muted">{{ actionLine() }}</p>
+    @if (details().oldestPendingAt; as oldest) { <p class="text-ink-muted">Alteração pendente mais antiga: {{ format(oldest) }}</p> }
+    @if (details().lastSyncAt) { <p class="text-ink-muted">Última sincronização concluída: {{ format(details().lastSyncAt) }}</p> }
+  </section>
+  @if (details().actionsRequired.length > 0) {
+    <section class="space-y-2" aria-labelledby="sync-actions-title">
+      <h2 id="sync-actions-title" class="font-sans text-lg font-semibold text-ink">Alterações que precisam da sua atenção</h2>
+      <ul class="divide-y divide-line border-y border-line">
+        @for (action of details().actionsRequired; track action.operationId) { <app-sync-action-item [action]="action" /> }
+      </ul>
+    </section>
+  }
+  @if (details().notices.length > 0) {
+    <section class="space-y-2" aria-labelledby="sync-notices-title">
+      <h2 id="sync-notices-title" class="font-sans text-lg font-semibold text-ink">Alterações que não se aplicam mais</h2>
+      <ul class="divide-y divide-line border-y border-line">
+        @for (notice of details().notices; track notice.operationId) {
+          <li class="py-3 text-sm"><p class="font-medium text-ink">{{ notice.kindLabel }}@if (notice.subject) {<span class="font-normal text-ink-muted">: {{ notice.subject }}</span>}</p><p class="text-ink-muted">Este item deixou de estar disponível, então a ação não se aplica mais. Seu histórico de estudo foi mantido.</p></li>
+        }
+      </ul>
+    </section>
+  }
+  <div class="flex flex-wrap gap-3">
+    @if (canRetry()) { <button appButton variant="primary" type="button" (click)="retry()">Tentar novamente</button> }
+    <a routerLink="/sincronizacao/conflitos" class="inline-flex min-h-11 items-center justify-center rounded-md border border-line-strong px-4 text-sm font-medium text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Conflitos resolvidos ({{ details().availableConflictCount }})</a>
+  </div>
+</main>

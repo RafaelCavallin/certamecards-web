@@ -1,9 +1,9 @@
-import { FLUSH_POLL_INTERVAL_MS } from './sync-constants';
+import { effect, untracked } from '@angular/core';
+import { SYNC_WATCHDOG_INTERVAL_MS } from './sync-constants';
 
 export interface SyncTriggerHandlers {
-  readonly onOnline: () => void;
-  readonly onVisible: () => void;
-  readonly onPoll: () => void;
+  readonly onTrigger: () => void;
+  readonly onReconnect?: () => void;
 }
 export interface SyncTriggerWindow {
   addEventListener(type: 'online', listener: () => void): void;
@@ -19,13 +19,34 @@ export interface SyncTriggerTargets {
 export function registerSyncTriggers(
   handlers: SyncTriggerHandlers,
   targets: SyncTriggerTargets = { window, document },
-  pollIntervalMs: number = FLUSH_POLL_INTERVAL_MS,
-): void {
-  targets.window.addEventListener('online', handlers.onOnline);
+  watchdogIntervalMs: number = SYNC_WATCHDOG_INTERVAL_MS,
+): () => void {
+  targets.window.addEventListener('online', handlers.onReconnect ?? handlers.onTrigger);
   targets.document.addEventListener('visibilitychange', () => {
     if (targets.document.visibilityState === 'visible') {
-      handlers.onVisible();
+      handlers.onTrigger();
     }
   });
-  setInterval(handlers.onPoll, pollIntervalMs);
+  const watchdog = setInterval(handlers.onTrigger, watchdogIntervalMs);
+  return () => clearInterval(watchdog);
+}
+export interface ReactiveTriggerSignals {
+  readonly isAuthenticated: () => boolean;
+  readonly pendingCount: () => number;
+}
+export function registerReactiveTriggers(signals: ReactiveTriggerSignals, onTrigger: () => void): void {
+  effect(() => {
+    if (signals.isAuthenticated()) {
+      untracked(onTrigger);
+    }
+  });
+  let previousPending = 0;
+  effect(() => {
+    const pending = signals.pendingCount();
+    const grew = pending > previousPending;
+    previousPending = pending;
+    if (grew) {
+      untracked(onTrigger);
+    }
+  });
 }

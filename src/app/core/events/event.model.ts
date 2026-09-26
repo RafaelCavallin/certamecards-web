@@ -15,6 +15,14 @@ export const PRODUCT_EVENT_NAMES = [
   'deck_unsubscribed',
   'deck_duplicated',
   'card_error_reported',
+  'offline_change_saved',
+  'sync_cycle_started',
+  'sync_cycle_completed',
+  'sync_action_required',
+  'sync_conflict_available',
+  'sync_conflict_restored',
+  'sync_logout_pending',
+  'sync_storage_failed',
 ] as const;
 export type ProductEventName = (typeof PRODUCT_EVENT_NAMES)[number];
 export interface ProductEvent {

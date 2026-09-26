@@ -64,7 +64,7 @@ it('TU — setLastSyncAt grava a data da última sincronização', async () => {
   expect(row?.value).toBe('2026-09-17T12:00:00Z');
 });
 
-it('TI-28 — clearAllLocalData apaga todas as tabelas locais, inclusive a outbox', async () => {
+it('clearAllLocalData apaga todas as tabelas locais, inclusive a outbox', async () => {
   db = new LocalDb();
   await db.setSession({
     userId: 'user-1', email: 'ana@exemplo.com', displayName: 'Ana', role: 'candidate', termsAccepted: true,

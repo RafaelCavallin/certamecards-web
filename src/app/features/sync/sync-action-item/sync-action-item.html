@@ -1,0 +1,24 @@
+<li class="space-y-3 py-4">
+  <p class="font-medium text-ink">{{ action().kindLabel }}@if (action().subject) {<span class="font-normal text-ink-muted">: {{ action().subject }}</span>}</p>
+  <p class="text-sm text-rate-again" role="alert">{{ message() }}</p>
+  @if (limitNote()) { <p class="text-sm text-ink-muted">{{ limitNote() }}</p> }
+  @if (action().copyText) {
+    <details class="text-sm text-ink-muted"><summary class="cursor-pointer">Ver texto da alteração</summary><p class="mt-2 whitespace-pre-wrap break-words text-ink">{{ action().copyText }}</p></details>
+  }
+  @if (confirming()) {
+    <div class="space-y-3" role="group" aria-labelledby="{{ confirmId }}">
+      <p class="text-sm text-ink" [id]="confirmId">{{ confirmText() }}</p>
+      <div class="flex flex-wrap gap-3">
+        <button #confirmButton appButton type="button" [disabled]="busy()" (click)="discard()">{{ confirmLabel() }}</button>
+        <button appButton variant="ghost" type="button" [disabled]="busy()" (click)="cancelDiscard()">Cancelar</button>
+      </div>
+    </div>
+  } @else {
+    <div class="flex flex-wrap gap-3">
+      @if (action().copyText) { <button appButton type="button" (click)="copy()">Copiar texto</button> }
+      @if (retryable()) { <button appButton type="button" [disabled]="busy()" (click)="retry()">Tentar novamente</button> }
+      @if (discardable()) { <button #discardButton appButton variant="ghost" type="button" (click)="askDiscard()">Descartar alteração</button> }
+    </div>
+  }
+  @if (feedback()) { <p class="text-sm text-ink-muted" role="status">{{ feedback() }}</p> }
+</li>

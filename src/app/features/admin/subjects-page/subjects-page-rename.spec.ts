@@ -4,7 +4,7 @@ import { expect, it } from 'vitest';
 import { aSubject, setupSubjectsPage } from './subjects-page-harness';
 import { SubjectsPage } from './subjects-page';
 
-it('TU-07 — renomeia uma matéria e atualiza a linha', async () => {
+it('renomeia uma matéria e atualiza a linha', async () => {
   const subject = aSubject({ name: 'Direito Penal' });
   const { updateSubject } = setupSubjectsPage([subject]);
   updateSubject.mockResolvedValue({ ...subject, name: 'Direito Processual Penal' });
@@ -22,7 +22,7 @@ it('TU-07 — renomeia uma matéria e atualiza a linha', async () => {
   expect(textContent(fixture, 'table')).toContain('Direito Processual Penal');
 });
 
-it('TU-07 — cancelar a renomeação mantém o nome original sem chamar a API', async () => {
+it('cancelar a renomeação mantém o nome original sem chamar a API', async () => {
   const subject = aSubject({ name: 'Direito Penal' });
   const { updateSubject } = setupSubjectsPage([subject]);
   const fixture = TestBed.createComponent(SubjectsPage);
@@ -37,7 +37,7 @@ it('TU-07 — cancelar a renomeação mantém o nome original sem chamar a API',
   expect(textContent(fixture, 'table')).toContain('Direito Penal');
 });
 
-it('TU-07 — desativa uma matéria após confirmar', async () => {
+it('desativa uma matéria após confirmar', async () => {
   const subject = aSubject({ active: true });
   const { updateSubject } = setupSubjectsPage([subject]);
   updateSubject.mockResolvedValue({ ...subject, active: false });

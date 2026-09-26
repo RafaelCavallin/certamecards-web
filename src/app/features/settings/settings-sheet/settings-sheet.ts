@@ -1,27 +1,24 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
 import { FormField, submit } from '@angular/forms/signals';
-import { AuthApi } from '../../../core/api/auth-api';
 import { AuthStore } from '../../../core/auth/auth-store';
-import { ConnectivityStore } from '../../../core/connectivity/connectivity-store';
 import { SettingsData } from '../../../core/data/settings-data';
+import { ProfileMutationWriter } from '../../../core/sync/profile-mutation-writer';
 import { ThemeService } from '../../../core/theme/theme-service';
 import { Button } from '../../../shared/ui/button/button';
-import { OfflineNotice } from '../../../shared/ui/offline-notice/offline-notice';
 import { Sheet } from '../../../shared/ui/sheet/sheet';
 import { DEFAULT_NEW_PER_DAY, DEFAULT_REVIEWS_PER_DAY, buildSettingsForm, emptySettingsFormModel } from './settings-content-form';
 import type { SettingsFormModel } from './settings-content-form';
 
 @Component({
   selector: 'app-settings-sheet',
-  imports: [Sheet, FormField, Button, OfflineNotice],
+  imports: [Sheet, FormField, Button],
   templateUrl: './settings-sheet.html',
 })
 export class SettingsSheet {
-  private readonly authApi = inject(AuthApi);
   private readonly authStore = inject(AuthStore);
   private readonly settingsData = inject(SettingsData);
+  private readonly profileWriter = inject(ProfileMutationWriter);
   private readonly themeService = inject(ThemeService);
-  protected readonly connectivity = inject(ConnectivityStore);
 
   readonly open = input.required<boolean>();
   readonly closed = output<void>();
@@ -80,11 +77,20 @@ export class SettingsSheet {
         timeZone: value.timeZone,
         theme: value.theme,
       });
-      this.authStore.updateUser(await this.authApi.updateDisplayName({ displayName: value.displayName }));
+      await this.saveDisplayName(value.displayName);
       this.originalTheme = value.theme;
       this.closed.emit();
     } finally {
       this.submitting.set(false);
     }
+  }
+
+  private async saveDisplayName(displayName: string): Promise<void> {
+    const user = this.authStore.user();
+    if (user === null || user.displayName === displayName) {
+      return;
+    }
+    await this.profileWriter.execute({ kind: 'profile_patch', displayName });
+    this.authStore.updateUser({ ...user, displayName });
   }
 }

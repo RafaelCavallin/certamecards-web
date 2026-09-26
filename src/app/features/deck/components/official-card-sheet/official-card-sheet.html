@@ -7,14 +7,14 @@
         <p class="text-xs text-ink-muted">Fonte: {{ current.source }}</p>
       }
       <div class="flex flex-wrap items-center gap-2 border-t border-line pt-4">
-        <button appButton size="sm" type="button" [disabled]="!online()" (click)="onToggleSuspend(current.id)">
+        <button appButton size="sm" type="button" (click)="onToggleSuspend(current.id)">
           {{ suspended() ? 'Reativar' : 'Suspender' }}
         </button>
         <button appButton variant="ghost" size="sm" type="button" [disabled]="!online()" (click)="onReport(current.id)">
           Apontar erro
         </button>
         @if (!online()) {
-          <span class="text-xs text-ink-muted">Isso precisa de conexão.</span>
+          <span class="text-xs text-ink-muted">Apontar erro precisa de conexão.</span>
         }
       </div>
     </div>

@@ -62,6 +62,20 @@ it('TU — filtro suspended mostra só cartões suspensos', () => {
   expect(rows.map((row) => row.id)).toEqual(['c1']);
 });
 
+it('TU — filtro new mostra cartões nunca estudados e cartões zerados (state=CARD_STATE_NEW)', () => {
+  const rows = buildCardListRows({
+    cards: [toCardRow(aCard({ id: 'c1' })), toCardRow(aCard({ id: 'c2' })), toCardRow(aCard({ id: 'c3' }))],
+    states: new Map([
+      ['c2', aState({ state: 0 })],
+      ['c3', aState({ state: 2 })],
+    ]),
+    query: '',
+    stateFilter: 'new',
+    now: NOW,
+  });
+  expect(rows.map((row) => row.id)).toEqual(['c1', 'c2']);
+});
+
 it('TU-19 — marca leech quando lapses chega a 8', () => {
   const rows = buildCardListRows({
     cards: [toCardRow(aCard())],

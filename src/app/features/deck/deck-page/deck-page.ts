@@ -87,7 +87,7 @@ export class DeckPage {
     if (currentDeck === undefined) {
       return;
     }
-    await this.decksData.delete(currentDeck.id, currentDeck.version);
+    await this.decksData.delete(currentDeck.id);
     this.deleteDeckConfirmOpen.set(false);
     await this.router.navigate(['/']);
   }

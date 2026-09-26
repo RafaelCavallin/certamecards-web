@@ -7,6 +7,7 @@ import { AUTH_PATHS } from '../../../core/auth/auth-constants';
 import { AuthStore } from '../../../core/auth/auth-store';
 import { postLoginRedirectPath } from '../../../core/auth/post-login-redirect';
 import { formatRetryAfter, loginErrorMessage } from './login-errors';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-login-page',
@@ -19,6 +20,7 @@ export class LoginPage {
   private readonly router = inject(Router);
 
   protected readonly googleAuthorizationUrl = `${AUTH_PATHS.googleAuthorization}?intent=login`;
+  protected readonly googleSignInEnabled = environment.googleSignInEnabled;
   protected readonly model = signal({ email: '', password: '' });
   protected readonly loginForm = form(this.model, (schemaPath) => {
     required(schemaPath.email, { message: 'Informe o e-mail.' });
@@ -44,7 +46,7 @@ export class LoginPage {
   private async attemptLogin(): Promise<void> {
     try {
       const response = await this.authApi.login(this.model());
-      this.authStore.setSession(response);
+      await this.authStore.setSession(response);
       await this.router.navigateByUrl(postLoginRedirectPath(response.user.termsAccepted));
     } catch (error) {
       this.handleLoginError(error);

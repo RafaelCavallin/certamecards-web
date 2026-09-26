@@ -49,10 +49,7 @@ test('E2E-10 — link de redefinição usado duas vezes mostra que expirou', asy
 });
 
 test('E2E-11 — login com o Google (conta de teste)', async ({ page }) => {
-  test.skip(
-    process.env['E2E_GOOGLE_EMAIL'] === undefined || process.env['E2E_GOOGLE_PASSWORD'] === undefined,
-    'requer E2E_GOOGLE_EMAIL e E2E_GOOGLE_PASSWORD configurados',
-  );
+  test.skip(true, 'login com o Google fica para uma versão futura (googleSignInEnabled = false)');
   await page.goto('/entrar');
 });
 

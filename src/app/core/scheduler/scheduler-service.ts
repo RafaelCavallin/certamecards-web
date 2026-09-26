@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { createEmptyCard, fsrs, generatorParameters, Grades } from 'ts-fsrs';
 import type { CardState } from '../api/card-state.model';
-import type { ReviewLogRow } from '../db/local-db.model';
+import type { ReviewLogRow } from '../db/account-db.model';
 import { fromFsrsCard, toFsrsCard, withoutTransientFields } from './card-state-conversion';
 import { formatInterval } from './format-interval';
 import { seedStateFrom } from './seed-state';

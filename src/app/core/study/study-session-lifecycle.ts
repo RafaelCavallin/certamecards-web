@@ -23,6 +23,7 @@ export async function undoSession(recorder: ReviewRecorder, session: SessionRunt
   if (entry === undefined) {
     return null;
   }
+  await session.pendingWrite;
   await recorder.undo(entry.writtenLogId, entry.cardId, entry.previousState);
   restoreUndoEntry(session, entry);
   session.revealedAt = Date.now();

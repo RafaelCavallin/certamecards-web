@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { expect, it } from 'vitest';
-import type { ReviewLogRow } from '../db/local-db.model';
+import type { ReviewLogRow } from '../db/account-db.model';
 import { SchedulerService } from './scheduler-service';
 
 const RELEARNING_AFTER = {
@@ -9,11 +9,13 @@ const RELEARNING_AFTER = {
 };
 const INHERITED_AFTER = { ...RELEARNING_AFTER, state: 2, due: '2026-10-01T00:00:00Z', reps: 3 };
 
-function aLog(overrides: Partial<ReviewLogRow>): ReviewLogRow {
+function aLog(overrides: Partial<ReviewLogRow> & { id: string; reviewedAt?: string }): ReviewLogRow {
+  const reviewedAt = overrides.reviewedAt ?? '2026-09-17T12:00:00Z';
   return {
-    id: 'log', cardId: 'c1', kind: 'review', rating: 3, reviewedAt: '2026-09-17T12:00:00Z', durationMs: 0,
+    cardId: 'c1', kind: 'review', rating: 3, reviewedAt, durationMs: 0,
     stateBefore: null, stateAfter: {}, offline: false, deviceId: 'device-1', sessionId: null,
-    changeSeq: 0, voided: false, ...overrides,
+    changeSeq: 0, voided: false, eventAt: reviewedAt, eventCounter: 0, eventDeviceId: 'device-1',
+    operationId: overrides.id, ...overrides,
   };
 }
 function setup(): SchedulerService {
@@ -33,7 +35,7 @@ it('TU-33 — replay aplica content_update reproduzindo o stateAfter e contando 
 
 it('TU-33 — replay preserva suspensão e changeSeq do estado anterior ao content_update', () => {
   const scheduler = setup();
-  const update = aLog({ kind: 'content_update', rating: null, stateAfter: RELEARNING_AFTER });
+  const update = aLog({ id: 'a', kind: 'content_update', rating: null, stateAfter: RELEARNING_AFTER });
   expect(scheduler.replay([update])).toMatchObject({ suspended: false, changeSeq: 0, reviewCount: 1 });
 });
 
@@ -48,7 +50,7 @@ it('TU-34 — replay aplica duplicate como semente e segue com as avaliações s
 
 it('TU-34 — replay ignora stateAfter inválido e mantém o estado anterior', () => {
   const scheduler = setup();
-  const broken = aLog({ kind: 'duplicate', rating: null, stateAfter: { state: 'x' } });
+  const broken = aLog({ id: 'a', kind: 'duplicate', rating: null, stateAfter: { state: 'x' } });
   expect(scheduler.replay([broken])).toBeNull();
   const seed = aLog({ id: 'a', kind: 'duplicate', rating: null, stateAfter: INHERITED_AFTER });
   const brokenLater = aLog({ id: 'b', reviewedAt: '2026-09-18T12:00:00Z', kind: 'content_update', rating: null, stateAfter: null });

@@ -71,3 +71,12 @@ it('TU — erro de validação do servidor mostra as mensagens dos campos', asyn
   fixture.detectChanges();
   expect(textContent(fixture, '[role="alert"][aria-live]')).toContain('E-mail inválido.');
 });
+
+it('TU — o acesso com o Google fica oculto nesta versão', () => {
+  setup();
+  const fixture = TestBed.createComponent(RegisterPage);
+  fixture.detectChanges();
+  const html = (fixture.nativeElement as HTMLElement).innerHTML;
+  expect(html).not.toContain('Google');
+  expect(html).not.toContain('oauth2/authorization');
+});

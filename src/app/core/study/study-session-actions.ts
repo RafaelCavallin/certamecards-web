@@ -49,11 +49,11 @@ export interface RateSessionInput {
   readonly current: CurrentCard;
   readonly rating: Rating;
 }
-export async function rateSession(input: RateSessionInput): Promise<RateOutcome> {
+export function rateSession(input: RateSessionInput): RateOutcome {
   const { recorder, session, current, rating } = input;
   const now = new Date();
   const durationMs = Math.min(now.getTime() - (session.revealedAt ?? now.getTime()), 600_000);
-  const result = await recorder.record({
+  const computed = recorder.compute({
     previousState: current.state,
     rating,
     now,
@@ -62,12 +62,21 @@ export async function rateSession(input: RateSessionInput): Promise<RateOutcome>
     deviceId: session.deviceId,
     sessionId: session.sessionId,
   });
-  session.undoStack.push(captureUndoEntry(session, current, result.logId));
-  applyRatingOutcome({ runtime: session, current, newState: result.state, rating });
+  enqueueWrite(session, () => recorder.persist(computed));
+  session.undoStack.push(captureUndoEntry(session, current, computed.log.id));
+  applyRatingOutcome({ runtime: session, current, newState: computed.state, rating });
   if (session.timer.isBlockDone(now)) {
     return { nextCurrent: null, finishedReason: 'focus_block' };
   }
   const picked = nextCard(session.queue, now);
   const nextCurrent = picked.card === null ? null : buildCurrentCard(session, picked.card);
   return { nextCurrent, finishedReason: picked.card === null ? 'completed' : null };
+}
+function enqueueWrite(session: SessionRuntime, write: () => Promise<void>): void {
+  session.pendingWrite = session.pendingWrite
+    .catch(() => undefined)
+    .then(write)
+    .catch((error: unknown) => {
+      session.lastWriteError = error;
+    });
 }

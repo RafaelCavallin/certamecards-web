@@ -1,16 +1,17 @@
-import type { ApiError } from '../../../core/api/api-error.model';
+import { LocalMutationValidationError, LocalStorageFullError } from '../../../core/sync/local-storage-error';
 
 const DEFAULT_DECK_ERROR_MESSAGE = 'Não foi possível salvar o deck. Tente de novo.';
-const SUBJECT_INACTIVE_MESSAGE = 'Essa matéria foi desativada. Escolha outra.';
-export function deckFormErrorMessage(apiError: ApiError | null): string {
-  if (apiError === null) {
-    return DEFAULT_DECK_ERROR_MESSAGE;
+const DECK_ERROR_MESSAGES: Record<string, string> = {
+  subject_inactive: 'Essa matéria não está disponível para uso offline.',
+  not_found: 'Esse deck não existe mais neste dispositivo.',
+  parent_deleted: 'Esse deck não existe mais neste dispositivo.',
+};
+export function deckFormErrorMessage(error: unknown): string {
+  if (error instanceof LocalStorageFullError) {
+    return error.message;
   }
-  if (apiError.code === 'subject_inactive') {
-    return SUBJECT_INACTIVE_MESSAGE;
-  }
-  if (apiError.code === 'validation_failed' && apiError.fields !== undefined && apiError.fields.length > 0) {
-    return apiError.fields.map((field) => field.message).join(' ');
+  if (error instanceof LocalMutationValidationError) {
+    return DECK_ERROR_MESSAGES[error.code] ?? DEFAULT_DECK_ERROR_MESSAGE;
   }
   return DEFAULT_DECK_ERROR_MESSAGE;
 }

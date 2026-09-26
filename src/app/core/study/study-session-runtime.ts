@@ -22,6 +22,8 @@ export interface SessionRuntime {
   correct: number;
   done: number;
   revealedAt: number | null;
+  pendingWrite: Promise<void>;
+  lastWriteError: unknown;
 }
 export interface CreateRuntimeInput {
   readonly scope: SessionScope;
@@ -50,6 +52,8 @@ export function createRuntime(input: CreateRuntimeInput): SessionRuntime {
     correct: 0,
     done: 0,
     revealedAt: null,
+    pendingWrite: Promise.resolve(),
+    lastWriteError: null,
   };
 }
 export function buildCurrentCard(runtime: SessionRuntime, ref: StudyCard): CurrentCard | null {

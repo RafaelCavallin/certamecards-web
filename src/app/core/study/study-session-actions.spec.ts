@@ -51,11 +51,12 @@ it('TU — startSession monta a sessão quando há cartão disponível', async (
 
 function recorderReturning(state: CardState): ReviewRecorder {
   return {
-    record: vi.fn().mockResolvedValue({ state, logId: 'log-1' }),
+    compute: vi.fn().mockReturnValue({ state, log: { id: 'log-1' } }),
+    persist: vi.fn().mockResolvedValue(undefined),
   } as unknown as ReviewRecorder;
 }
 
-it('TU — rateSession encerra por bloco de foco quando o tempo acabou', async () => {
+it('TU — rateSession encerra por bloco de foco quando o tempo acabou', () => {
   const runtime = createRuntime({
     scope: { kind: 'all' },
     cardsById: new Map([['c1', aCard('c1')]]),
@@ -71,13 +72,13 @@ it('TU — rateSession encerra por bloco de foco quando o tempo acabou', async (
   const recorder = recorderReturning(aState());
   vi.useFakeTimers();
   vi.setSystemTime(new Date(NOW.getTime() + 90_000));
-  const outcome = await rateSession({ recorder, session: runtime, current, rating: 3 });
+  const outcome = rateSession({ recorder, session: runtime, current, rating: 3 });
   vi.useRealTimers();
   expect(outcome.finishedReason).toBe('focus_block');
   expect(outcome.nextCurrent).toBeNull();
 });
 
-it('TU — rateSession devolve completed quando a fila acaba', async () => {
+it('TU — rateSession devolve completed quando a fila acaba', () => {
   const runtime = createRuntime({
     scope: { kind: 'all' },
     cardsById: new Map([['c1', aCard('c1')]]),
@@ -93,7 +94,7 @@ it('TU — rateSession devolve completed quando a fila acaba', async () => {
   const recorder = recorderReturning(aState());
   vi.useFakeTimers();
   vi.setSystemTime(new Date(NOW.getTime() + 60_000));
-  const outcome = await rateSession({ recorder, session: runtime, current, rating: 3 });
+  const outcome = rateSession({ recorder, session: runtime, current, rating: 3 });
   vi.useRealTimers();
   expect(outcome.finishedReason).toBe('completed');
   expect(outcome.nextCurrent).toBeNull();

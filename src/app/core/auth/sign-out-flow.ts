@@ -1,38 +1,64 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { LocalDb } from '../db/local-db';
-import { SyncService } from '../sync/sync-service';
+import { ConnectivityStore } from '../connectivity/connectivity-store';
+import { SyncCycleCoordinator } from '../sync/sync-cycle-coordinator';
+import { SyncStatusStore } from '../sync/sync-status-store';
 import { AuthStore } from './auth-store';
 
+export type SignOutDialog = 'closed' | 'choice' | 'discardConfirm';
 @Injectable({ providedIn: 'root' })
 export class SignOutFlow {
   private readonly authStore = inject(AuthStore);
-  private readonly syncService = inject(SyncService);
-  private readonly localDb = inject(LocalDb);
-  private readonly confirmationOpenSignal = signal(false);
+  private readonly syncCycleCoordinator = inject(SyncCycleCoordinator);
+  private readonly syncStatusStore = inject(SyncStatusStore);
+  private readonly connectivity = inject(ConnectivityStore);
+  private readonly dialogSignal = signal<SignOutDialog>('closed');
+  private readonly failedSignal = signal(false);
 
-  readonly confirmationOpen = this.confirmationOpenSignal.asReadonly();
+  readonly dialog = this.dialogSignal.asReadonly();
+  readonly logoutFailed = this.failedSignal.asReadonly();
+  readonly pendingCount = this.syncStatusStore.pendingCount;
+  readonly online = this.connectivity.online;
 
   requestSignOut(): void {
-    if (this.syncService.pendingCount() > 0) {
-      this.confirmationOpenSignal.set(true);
+    this.failedSignal.set(false);
+    if (this.syncStatusStore.pendingCount() === 0) {
+      void this.finishLogout();
       return;
     }
-    void this.authStore.logout();
+    this.dialogSignal.set('choice');
   }
 
-  cancel(): void {
-    this.confirmationOpenSignal.set(false);
+  stay(): void {
+    this.dialogSignal.set('closed');
   }
 
-  async confirmWait(): Promise<void> {
-    this.confirmationOpenSignal.set(false);
-    await this.syncService.flush();
-    await this.authStore.logout();
+  async syncAndSignOut(): Promise<void> {
+    await this.syncCycleCoordinator.runNow();
+    if (this.syncStatusStore.pendingCount() > 0) {
+      this.failedSignal.set(true);
+      return;
+    }
+    await this.finishLogout();
   }
 
-  async confirmLeaveAnyway(): Promise<void> {
-    this.confirmationOpenSignal.set(false);
-    await this.localDb.clearAllLocalData();
-    await this.authStore.logout();
+  requestDiscard(): void {
+    this.dialogSignal.set('discardConfirm');
+  }
+
+  backToChoice(): void {
+    this.dialogSignal.set('choice');
+  }
+
+  async confirmDiscard(): Promise<void> {
+    await this.finishLogout();
+  }
+
+  private async finishLogout(): Promise<void> {
+    try {
+      await this.authStore.logout();
+      this.dialogSignal.set('closed');
+    } catch {
+      this.failedSignal.set(true);
+    }
   }
 }

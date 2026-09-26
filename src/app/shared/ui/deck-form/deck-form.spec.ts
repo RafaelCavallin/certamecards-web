@@ -5,7 +5,7 @@ import { DeckForm } from './deck-form';
 
 const SUBJECTS = [{ id: 's1', name: 'Direito Constitucional', active: true, changeSeq: 1 }];
 
-it('TU-09 — não cria o deck sem matéria e sem nome', async () => {
+it('não cria o deck sem matéria e sem nome', async () => {
   const fixture = TestBed.createComponent(DeckForm);
   fixture.componentRef.setInput('subjects', SUBJECTS);
   const handler = vi.fn();
@@ -16,7 +16,7 @@ it('TU-09 — não cria o deck sem matéria e sem nome', async () => {
   expect(handler).not.toHaveBeenCalled();
 });
 
-it('TU-09 — emite saved com a matéria, o nome e a descrição preenchidos', async () => {
+it('emite saved com a matéria, o nome e a descrição preenchidos', async () => {
   const fixture = TestBed.createComponent(DeckForm);
   fixture.componentRef.setInput('subjects', SUBJECTS);
   const handler = vi.fn();
@@ -33,12 +33,11 @@ it('TU-09 — emite saved com a matéria, o nome e a descrição preenchidos', a
   expect(handler).toHaveBeenCalledWith({ subjectId: 's1', name: 'CF/88', description: '' });
 });
 
-it('TU — desabilita o envio e mostra o aviso quando está sem rede', () => {
+it('TU — o envio continua disponível sem rede', () => {
   const fixture = TestBed.createComponent(DeckForm);
   fixture.componentRef.setInput('subjects', SUBJECTS);
-  fixture.componentRef.setInput('online', false);
   fixture.detectChanges();
   const button = queryElement(fixture, 'button[type="submit"]') as HTMLButtonElement;
-  expect(button.disabled).toBe(true);
-  expect(rootText(fixture)).toContain('Isso precisa de conexão.');
+  expect(button.disabled).toBe(false);
+  expect(rootText(fixture)).not.toContain('Isso precisa de conexão.');
 });

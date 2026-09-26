@@ -1,1 +1,7 @@
-<p class="text-sm text-ink-muted" role="status">{{ label() }}</p>
+<button type="button" class="inline-flex min-h-11 items-center gap-2 text-sm text-ink-muted hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus" aria-live="polite" (click)="opened.emit()">
+  <span aria-hidden="true" class="h-2 w-2 rounded-full bg-line-strong"></span>
+  <span>{{ label() }}</span>
+  @if (pendingCount() > 0) {
+    <span class="rounded-full bg-surface-raised px-2 py-0.5 text-xs text-ink">{{ pendingCount() }}</span>
+  }
+</button>

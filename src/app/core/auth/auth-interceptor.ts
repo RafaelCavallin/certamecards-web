@@ -21,6 +21,7 @@ interface RetryContext {
   readonly req: HttpRequest<unknown>;
   readonly next: HttpHandlerFn;
   readonly authStore: AuthStore;
+  readonly requestUserId: string | null;
 }
 export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> {
   const authStore = inject(AuthStore);
@@ -28,9 +29,8 @@ export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn):
     return next(req);
   }
   const authorizedReq = attachToken(req, authStore.accessToken());
-  return next(authorizedReq).pipe(
-    catchError((error: unknown) => retryOnUnauthorized(error, { req: authorizedReq, next, authStore })),
-  );
+  const context: RetryContext = { req: authorizedReq, next, authStore, requestUserId: authStore.user()?.id ?? null };
+  return next(authorizedReq).pipe(catchError((error: unknown) => retryOnUnauthorized(error, context)));
 }
 function attachToken(req: HttpRequest<unknown>, token: string | null): HttpRequest<unknown> {
   if (token === null || !req.url.startsWith(environment.apiBaseUrl)) {
@@ -42,10 +42,10 @@ function retryOnUnauthorized(error: unknown, context: RetryContext): Observable<
   if (!(error instanceof HttpErrorResponse) || error.status !== 401) {
     return throwError(() => error);
   }
-  const { req, next, authStore } = context;
+  const { req, next, authStore, requestUserId } = context;
   return from(authStore.handleUnauthorized()).pipe(
     switchMap((refreshed) => {
-      if (!refreshed) {
+      if (!refreshed || authStore.user()?.id !== requestUserId) {
         return throwError(() => error);
       }
       return next(attachToken(req, authStore.accessToken()));

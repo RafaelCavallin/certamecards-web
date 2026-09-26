@@ -61,6 +61,8 @@
       Criar conta
     </button>
   </form>
-  <a class="text-center text-sm text-ink-muted underline" [href]="googleAuthorizationUrl">Cadastrar com o Google</a>
+  @if (googleSignInEnabled) {
+    <a class="text-center text-sm text-ink-muted underline" [href]="googleAuthorizationUrl">Cadastrar com o Google</a>
+  }
   <a routerLink="/entrar" class="text-center text-sm text-ink-muted underline">Já tenho conta</a>
 </main>

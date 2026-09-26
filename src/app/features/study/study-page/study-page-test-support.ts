@@ -8,7 +8,8 @@ import type { Deck } from '../../../core/api/deck.model';
 import { AuthStore } from '../../../core/auth/auth-store';
 import { SubjectsData } from '../../../core/data/subjects-data';
 import { toCardRow } from '../../../core/db/card-row';
-import { LocalDb } from '../../../core/db/local-db';
+import { AccountDb } from '../../../core/db/account-db';
+import { CurrentAccountDb } from '../../../core/db/current-account-db';
 import { StudyPage } from './study-page';
 
 export function aDeck(): Deck {
@@ -31,7 +32,7 @@ export function aState(cardId: string): CardState {
   };
 }
 export async function setupStudyPage(seedCards: boolean): Promise<{
-  db: LocalDb;
+  db: AccountDb;
   fixture: ReturnType<typeof TestBed.createComponent<StudyPage>>;
 }> {
   TestBed.configureTestingModule({
@@ -42,7 +43,8 @@ export async function setupStudyPage(seedCards: boolean): Promise<{
       { provide: Router, useValue: { navigate: vi.fn().mockResolvedValue(true) } },
     ],
   });
-  const db = TestBed.inject(LocalDb);
+  const db = new AccountDb('study-page-test');
+  TestBed.inject(CurrentAccountDb).set({ db, userId: 'study-page-test' });
   if (seedCards) {
     await db.decks.add(aDeck());
     await db.cards.bulkAdd([toCardRow(aCard('c1')), toCardRow(aCard('c2'))]);

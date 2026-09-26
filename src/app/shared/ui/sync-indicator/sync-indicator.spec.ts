@@ -15,7 +15,7 @@ it('TU — mostra a contagem de pendentes', () => {
   fixture.componentRef.setInput('status', 'pending');
   fixture.componentRef.setInput('pendingCount', 10);
   fixture.detectChanges();
-  expect(rootText(fixture)?.trim()).toBe('10 pendentes');
+  expect(rootText(fixture)?.trim()).toBe('10 pendentes10');
 });
 
 it('TU — mostra "Sem conexão" quando offline', () => {

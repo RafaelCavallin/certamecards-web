@@ -1,0 +1,28 @@
+<main class="mx-auto flex max-w-[720px] flex-col gap-8 px-6 py-12">
+  <header class="space-y-3"><a routerLink="/sincronizacao" class="inline-flex min-h-11 items-center text-sm text-ink-muted hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Voltar à sincronização</a><h1 class="font-serif text-4xl text-ink">Conflitos resolvidos</h1><p class="text-ink-muted">Quando a mesma informação muda em dois lugares, a alteração mais recente fica valendo e a outra é guardada aqui por 30 dias. Compare e, se preferir, restaure a versão guardada antes do prazo.</p></header>
+  <p #statusMessage role="status" tabindex="-1" class="text-sm text-ink-muted empty:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{{ message() }}</p>
+  @if (rows().length === 0) { <p class="border-y border-line py-6 text-ink-muted">Nenhuma versão guardada para revisar.</p> } @else {
+    <ul class="divide-y divide-line border-y border-line">@for (row of rows(); track row.id) {
+      <li class="flex flex-wrap items-center justify-between gap-4 py-4">
+        <div class="min-w-0 space-y-1">
+          <p class="font-medium text-ink">{{ row.typeLabel }}@if (row.title) {<span class="font-normal text-ink-muted">: {{ row.title }}</span>}</p>
+          @if (row.deckLine) { <p class="text-sm text-ink-muted">{{ row.deckLine }}</p> }
+          <p class="text-sm text-ink-muted">Guardada em {{ row.savedAtLabel }}</p>
+          @if (row.restoredAtLabel) { <p class="text-sm text-ink-muted">Restaurada em {{ row.restoredAtLabel }}. Esta versão passou a ser a atual.</p> }
+          @else if (row.expired) { <p class="text-sm text-ink-muted">Prazo encerrado em {{ row.expiresAtLabel }}. Esta versão não pode mais ser restaurada.</p> }
+          @else { <p class="text-sm text-ink-muted">Pode ser restaurada até {{ row.expiresAtLabel }}</p> }
+        </div>
+        @if (!row.expired && !row.restoredAtLabel) {
+          <button #compareButton appButton type="button" [attr.data-conflict-id]="row.id" [attr.aria-expanded]="detailId() === row.id" [disabled]="cache.isLoading(row.id)" (click)="detailId() === row.id ? closeCompare(row.id) : open(row.id)">{{ cache.isLoading(row.id) ? 'Carregando versão…' : detailId() === row.id ? 'Fechar comparação' : 'Comparar' }}</button>
+        }
+        @if (detailId() === row.id && selected()?.detail; as detail) {
+          <div class="w-full space-y-4 border-t border-line pt-4">
+            <app-conflict-compare [detail]="detail" />
+            <button #restoreButton appButton variant="primary" type="button" (click)="restoreRequested()">Restaurar versão guardada</button>
+            <app-conflict-restore-dialog [open]="restoringId() === row.id" [isOrphanCard]="isOrphanCard()" [decks]="decks()" (confirmed)="restore($event)" (closed)="restoreClosed()" />
+          </div>
+        }
+      </li>
+    }</ul>
+  }
+</main>

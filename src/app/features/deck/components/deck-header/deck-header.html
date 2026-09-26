@@ -16,7 +16,7 @@
         <button appButton size="sm" type="button" (click)="onEdit()">Editar</button>
       }
       @if (actions().resetProgress) {
-        <button appButton size="sm" type="button" [disabled]="!online()" (click)="onResetProgress()">Zerar progresso</button>
+        <button appButton size="sm" type="button" (click)="onResetProgress()">Zerar progresso</button>
       }
       @if (actions().duplicate) {
         <button appButton size="sm" type="button" [disabled]="!online()" (click)="onDuplicate()">Duplicar como deck próprio</button>

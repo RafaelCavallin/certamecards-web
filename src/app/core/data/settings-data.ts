@@ -1,36 +1,23 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, Injector, inject } from '@angular/core';
 import type { Signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { liveQuery } from 'dexie';
-import { from } from 'rxjs';
 import type { UpdateUserSettingsRequest } from '../api/settings-api';
-import { SettingsApi } from '../api/settings-api';
 import type { UserSettings } from '../api/settings.model';
-import { AuthStore } from '../auth/auth-store';
-import type { SettingsRow } from '../db/local-db.model';
-import { LocalDb } from '../db/local-db';
+import type { AccountSettingsRow } from '../db/account-db.model';
+import { CurrentAccountDb } from '../db/current-account-db';
+import { SettingsMutationWriter } from '../sync/settings-mutation-writer';
+import { accountLiveSignal } from './account-live-query';
 
 @Injectable({ providedIn: 'root' })
 export class SettingsData {
-  private readonly localDb = inject(LocalDb);
-  private readonly authStore = inject(AuthStore);
-  private readonly settingsApi = inject(SettingsApi);
+  private readonly currentAccountDb = inject(CurrentAccountDb);
+  private readonly settingsWriter = inject(SettingsMutationWriter);
+  private readonly injector = inject(Injector);
 
-  readonly current: Signal<SettingsRow | undefined> = toSignal(from(liveQuery(() => this.fetchCurrent())), {
-    initialValue: undefined,
+  readonly current: Signal<AccountSettingsRow | undefined> = accountLiveSignal(this.injector, this.currentAccountDb, {
+    query: (account) => account.db.settings.get(account.userId), initialValue: undefined,
   });
 
-  async update(request: UpdateUserSettingsRequest): Promise<UserSettings> {
-    const settings = await this.settingsApi.update(request);
-    const userId = this.authStore.user()?.id;
-    if (userId !== undefined) {
-      await this.localDb.settings.put({ ...settings, userId });
-    }
-    return settings;
-  }
-
-  private fetchCurrent(): Promise<SettingsRow | undefined> {
-    const userId = this.authStore.user()?.id;
-    return userId === undefined ? Promise.resolve(undefined) : this.localDb.settings.get(userId);
+  update(request: UpdateUserSettingsRequest): Promise<UserSettings> {
+    return this.settingsWriter.execute({ kind: 'settings_patch', changes: request });
   }
 }

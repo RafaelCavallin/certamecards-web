@@ -2,12 +2,15 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, expect, it, vi } from 'vitest';
 import { ErrorReportsApi } from '../api/error-reports-api';
+import { AccountDb } from '../db/account-db';
 import { toCardRow } from '../db/card-row';
+import { CurrentAccountDb } from '../db/current-account-db';
 import { LocalDb } from '../db/local-db';
 import { EventsService } from '../events/events-service';
 import { ErrorReportFlow } from './error-report-flow';
 
 let db: LocalDb;
+let accountDb: AccountDb;
 const record = vi.fn();
 
 function setup(create: ReturnType<typeof vi.fn>): ErrorReportFlow {
@@ -15,12 +18,15 @@ function setup(create: ReturnType<typeof vi.fn>): ErrorReportFlow {
     providers: [ErrorReportFlow, { provide: ErrorReportsApi, useValue: { create } }, { provide: EventsService, useValue: { record } }],
   });
   db = TestBed.inject(LocalDb);
+  accountDb = new AccountDb('error-report-flow-test');
+  TestBed.inject(CurrentAccountDb).set({ db: accountDb, userId: 'error-report-flow-test' });
   return TestBed.inject(ErrorReportFlow);
 }
 const REQUEST = { reason: 'typo', note: null } as const;
 
 afterEach(async () => {
   await db.delete();
+  await accountDb.delete();
 });
 
 it('TI-57 — abrir sem apontamento anterior mostra o formulário', async () => {
@@ -79,7 +85,7 @@ it('TU — close volta a closed e limpa a mensagem; submit sem open não faz nad
 
 it('deck registra card_error_reported com deckId e motivo, sem o texto do apontamento', async () => {
   const flow = setup(vi.fn().mockResolvedValue({ id: 'r1' }));
-  await db.cards.put(
+  await accountDb.cards.put(
     toCardRow({
       id: 'c1', deckId: 'd1', type: 'basic', front: 'F', back: 'B', source: null,
       createdAt: '2026-09-17T00:00:00Z', updatedAt: '2026-09-17T00:00:00Z', deletedAt: null, version: 1, changeSeq: 1,
@@ -88,4 +94,11 @@ it('deck registra card_error_reported com deckId e motivo, sem o texto do aponta
   await flow.open('c1');
   await flow.submit({ reason: 'typo', note: 'texto livre' });
   expect(record).toHaveBeenCalledWith('card_error_reported', { deckId: 'd1', reason: 'typo' });
+});
+
+it('deck registra card_error_reported com deckId nulo quando o cartão não está na base da conta ativa', async () => {
+  const flow = setup(vi.fn().mockResolvedValue({ id: 'r1' }));
+  await flow.open('c2');
+  await flow.submit({ reason: 'typo', note: null });
+  expect(record).toHaveBeenCalledWith('card_error_reported', { deckId: null, reason: 'typo' });
 });

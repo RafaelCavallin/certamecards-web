@@ -41,7 +41,9 @@
       Entrar
     </button>
   </form>
-  <a class="text-center text-sm text-ink-muted underline" [href]="googleAuthorizationUrl">Entrar com o Google</a>
+  @if (googleSignInEnabled) {
+    <a class="text-center text-sm text-ink-muted underline" [href]="googleAuthorizationUrl">Entrar com o Google</a>
+  }
   <div class="flex justify-between text-sm">
     <a routerLink="/esqueci-senha" class="text-ink-muted underline">Esqueci minha senha</a>
     <a routerLink="/cadastrar" class="text-ink-muted underline">Criar conta</a>

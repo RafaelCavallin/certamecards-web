@@ -5,7 +5,7 @@ import { expect, it } from 'vitest';
 import { anAdmin, setupAdminsPage } from './admins-page-harness';
 import { AdminsPage } from './admins-page';
 
-it('TU-09 — retira o papel após confirmar e remove da lista', async () => {
+it('retira o papel após confirmar e remove da lista', async () => {
   const { revokeAdmin } = setupAdminsPage([anAdmin({ id: '2', displayName: 'Bruno' })]);
   revokeAdmin.mockResolvedValue(undefined);
   const fixture = TestBed.createComponent(AdminsPage);
@@ -21,7 +21,7 @@ it('TU-09 — retira o papel após confirmar e remove da lista', async () => {
   expect(textContent(fixture, 'table')).not.toContain('Bruno');
 });
 
-it('TU-09 — cancelar a retirada mantém o administrador na lista', async () => {
+it('cancelar a retirada mantém o administrador na lista', async () => {
   const { revokeAdmin } = setupAdminsPage([anAdmin({ displayName: 'Ana' })]);
   const fixture = TestBed.createComponent(AdminsPage);
   fixture.detectChanges();

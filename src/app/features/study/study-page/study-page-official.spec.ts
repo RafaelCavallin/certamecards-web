@@ -6,12 +6,16 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { AuthStore } from '../../../core/auth/auth-store';
 import { SubjectsData } from '../../../core/data/subjects-data';
 import { toCardRow } from '../../../core/db/card-row';
+import { AccountDb } from '../../../core/db/account-db';
+import { CurrentAccountDb } from '../../../core/db/current-account-db';
 import { LocalDb } from '../../../core/db/local-db';
+import { StudySessionStore } from '../../../core/study/study-session-store';
 import { clickElement, queryAll, queryElement, rootText, waitFor } from '../../../testing/dom-testing';
 import { aCard, aDeck, aState } from './study-page-test-support';
 import { StudyPage } from './study-page';
 
-let db: LocalDb;
+let db: AccountDb;
+let localDb: LocalDb;
 
 async function setup(note: string | null): Promise<ReturnType<typeof TestBed.createComponent<StudyPage>>> {
   TestBed.configureTestingModule({
@@ -24,7 +28,9 @@ async function setup(note: string | null): Promise<ReturnType<typeof TestBed.cre
       { provide: Router, useValue: { navigate: vi.fn().mockResolvedValue(true) } },
     ],
   });
-  db = TestBed.inject(LocalDb);
+  db = new AccountDb('study-page-official-test');
+  TestBed.inject(CurrentAccountDb).set({ db, userId: 'study-page-official-test' });
+  localDb = TestBed.inject(LocalDb);
   await db.decks.add({ ...aDeck(), origin: 'official_subscription', officialStatus: 'published' });
   await db.cards.bulkAdd([toCardRow(aCard('c1')), toCardRow(aCard('c2'))]);
   const contentUpdatedAt = note === null ? null : '2026-09-17T00:00:00Z';
@@ -43,7 +49,10 @@ beforeEach(() => {
 });
 afterEach(async () => {
   vi.useRealTimers();
+  await TestBed.inject(StudySessionStore).flushPendingWrites();
+  TestBed.resetTestingModule();
   await db.delete();
+  await localDb.delete();
 });
 
 it('TI-55 — o cartão com nota mostra o aviso antes da revelação e ele some ao avaliar', async () => {
@@ -55,7 +64,8 @@ it('TI-55 — o cartão com nota mostra o aviso antes da revelação e ele some 
   await waitFor(() => queryElement(fixture, '#s-rate-3') !== null);
   clickElement(fixture, '#s-rate-3');
   await waitFor(() => rootText(fixture)?.includes('Atualizado em') === false);
-  expect(await db.outbox.count()).toBe(1);
+  await TestBed.inject(StudySessionStore).flushPendingWrites();
+  expect(await db.reviewOutbox.count()).toBe(1);
   expect((await db.cardStates.get('c1'))?.contentUpdateNote).toBeNull();
 });
 
@@ -84,12 +94,12 @@ it('TI-57 — apontar erro não altera o cartão, a fila nem o histórico e devo
   expect(document.activeElement).toBe(trigger);
   expect(rootText(fixture)).toContain('Pergunta c1');
   expect(await db.reviewLogs.count()).toBe(0);
-  expect(await db.outbox.count()).toBe(0);
+  expect(await db.reviewOutbox.count()).toBe(0);
 });
 
 it('TI-57 — o segundo apontamento no mesmo cartão mostra "Você já apontou um erro neste cartão"', async () => {
   const fixture = await setup(null);
-  await db.errorReports.put({ cardId: 'c1', reportedAt: '2026-09-18T08:00:00Z' });
+  await localDb.errorReports.put({ cardId: 'c1', reportedAt: '2026-09-18T08:00:00Z' });
   queryAll(fixture, 'app-study-error-report button')[0]?.click();
   await waitFor(() => {
     fixture.detectChanges();

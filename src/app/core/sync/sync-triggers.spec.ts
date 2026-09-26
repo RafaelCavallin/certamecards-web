@@ -1,7 +1,10 @@
+import { signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { afterEach, expect, it, vi } from 'vitest';
+import { waitFor } from '../../testing/dom-testing';
+import { SYNC_WATCHDOG_INTERVAL_MS } from './sync-constants';
 import type { SyncTriggerDocument, SyncTriggerTargets, SyncTriggerWindow } from './sync-triggers';
-import { registerSyncTriggers } from './sync-triggers';
-import { FLUSH_POLL_INTERVAL_MS } from './sync-constants';
+import { registerReactiveTriggers, registerSyncTriggers } from './sync-triggers';
 
 function fakeTargets(visibilityState: string): {
   targets: SyncTriggerTargets;
@@ -32,35 +35,60 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-it('TU — dispara onOnline quando o navegador reconecta', () => {
-  const onOnline = vi.fn();
+it('TU — dispara onTrigger quando o navegador reconecta', () => {
+  const onTrigger = vi.fn();
   const { targets, triggerOnline } = fakeTargets('visible');
-  registerSyncTriggers({ onOnline, onVisible: vi.fn(), onPoll: vi.fn() }, targets);
+  registerSyncTriggers({ onTrigger }, targets);
   triggerOnline();
-  expect(onOnline).toHaveBeenCalledOnce();
+  expect(onTrigger).toHaveBeenCalledOnce();
 });
 
-it('TU — dispara onVisible quando a aba volta a ficar visível', () => {
-  const onVisible = vi.fn();
+it('TU — usa onReconnect em vez de onTrigger quando informado, para antecipar o backoff', () => {
+  const onTrigger = vi.fn();
+  const onReconnect = vi.fn();
+  const { targets, triggerOnline } = fakeTargets('visible');
+  registerSyncTriggers({ onTrigger, onReconnect }, targets);
+  triggerOnline();
+  expect(onReconnect).toHaveBeenCalledOnce();
+  expect(onTrigger).not.toHaveBeenCalled();
+});
+
+it('TU — dispara onTrigger quando a aba volta a ficar visível', () => {
+  const onTrigger = vi.fn();
   const { targets, triggerVisibilityChange } = fakeTargets('visible');
-  registerSyncTriggers({ onOnline: vi.fn(), onVisible, onPoll: vi.fn() }, targets);
+  registerSyncTriggers({ onTrigger }, targets);
   triggerVisibilityChange();
-  expect(onVisible).toHaveBeenCalledOnce();
+  expect(onTrigger).toHaveBeenCalledOnce();
 });
 
-it('TU — não dispara onVisible quando a aba fica oculta', () => {
-  const onVisible = vi.fn();
+it('TU — não dispara onTrigger quando a aba fica oculta', () => {
+  const onTrigger = vi.fn();
   const { targets, triggerVisibilityChange } = fakeTargets('hidden');
-  registerSyncTriggers({ onOnline: vi.fn(), onVisible, onPoll: vi.fn() }, targets);
+  registerSyncTriggers({ onTrigger }, targets);
   triggerVisibilityChange();
-  expect(onVisible).not.toHaveBeenCalled();
+  expect(onTrigger).not.toHaveBeenCalled();
 });
 
-it('TU — dispara onPoll a cada intervalo configurado', () => {
+it('TU-70 — dispara onTrigger a cada intervalo do watchdog', () => {
   vi.useFakeTimers();
-  const onPoll = vi.fn();
+  const onTrigger = vi.fn();
   const { targets } = fakeTargets('visible');
-  registerSyncTriggers({ onOnline: vi.fn(), onVisible: vi.fn(), onPoll }, targets);
-  vi.advanceTimersByTime(FLUSH_POLL_INTERVAL_MS * 2);
-  expect(onPoll).toHaveBeenCalledTimes(2);
+  registerSyncTriggers({ onTrigger }, targets);
+  vi.advanceTimersByTime(SYNC_WATCHDOG_INTERVAL_MS * 2);
+  expect(onTrigger).toHaveBeenCalledTimes(2);
+});
+
+it('TU — registerReactiveTriggers dispara ao autenticar e ao crescer a fila, não ao encolher', async () => {
+  TestBed.configureTestingModule({});
+  const authenticated = signal(false);
+  const pendingCount = signal(0);
+  const onTrigger = vi.fn();
+  TestBed.runInInjectionContext(() => registerReactiveTriggers({ isAuthenticated: authenticated, pendingCount }, onTrigger));
+  authenticated.set(true);
+  await waitFor(() => onTrigger.mock.calls.length === 1);
+  pendingCount.set(3);
+  await waitFor(() => onTrigger.mock.calls.length === 2);
+  pendingCount.set(1);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  expect(onTrigger).toHaveBeenCalledTimes(2);
 });

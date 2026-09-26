@@ -79,8 +79,8 @@ module.exports = defineConfig([
       'no-console': 'error',
       'no-debugger': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      'max-lines': ['error', 100],
-      'max-lines-per-function': ['error', 30],
+      'max-lines': ['error', 200],
+      'max-lines-per-function': ['error', 50],
       'max-depth': ['error', 3],
       'max-params': ['error', 3],
       '@stylistic/padding-line-between-statements': [

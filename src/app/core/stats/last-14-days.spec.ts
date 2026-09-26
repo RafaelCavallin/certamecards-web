@@ -1,12 +1,13 @@
 import { expect, it } from 'vitest';
-import type { ReviewLogRow } from '../db/local-db.model';
+import type { ReviewLogRow } from '../db/account-db.model';
 import { computeLast14Days } from './last-14-days';
 
 const SAO_PAULO = 'America/Sao_Paulo';
 const NOW = new Date('2026-09-17T18:00:00Z');
 function reviewLog(overrides: Partial<ReviewLogRow>): ReviewLogRow {
+  const id = crypto.randomUUID();
   return {
-    id: crypto.randomUUID(),
+    id,
     cardId: 'card-1',
     kind: 'review',
     rating: 3,
@@ -19,6 +20,10 @@ function reviewLog(overrides: Partial<ReviewLogRow>): ReviewLogRow {
     sessionId: null,
     changeSeq: 1,
     voided: false,
+    eventAt: NOW.toISOString(),
+    eventCounter: 0,
+    eventDeviceId: 'device-1',
+    operationId: id,
     ...overrides,
   };
 }

@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { expect, it, vi } from 'vitest';
-import { ConnectivityStore } from '../../../core/connectivity/connectivity-store';
 import { DecksData } from '../../../core/data/decks-data';
 import { SubjectsData } from '../../../core/data/subjects-data';
 import { queryElement, rootText, setInputValue, submitForm } from '../../../testing/dom-testing';
@@ -15,7 +14,6 @@ function setup(create: ReturnType<typeof vi.fn>): { fixture: ReturnType<typeof T
     providers: [
       { provide: DecksData, useValue: { create } },
       { provide: SubjectsData, useValue: { active: () => SUBJECTS } },
-      { provide: ConnectivityStore, useValue: { online: () => true } },
       { provide: Router, useValue: { navigate } },
     ],
   });

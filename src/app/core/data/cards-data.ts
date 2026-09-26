@@ -1,62 +1,53 @@
-import { Injectable, Injector, inject, runInInjectionContext } from '@angular/core';
+import { Injectable, Injector, inject } from '@angular/core';
 import type { Signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { liveQuery } from 'dexie';
-import { from } from 'rxjs';
 import type { Card, CreateCardRequest, UpdateCardRequest } from '../api/card.model';
-import { CardsApi } from '../api/cards-api';
-import { toCardRow } from '../db/card-row';
-import { LocalDb } from '../db/local-db';
+import { CurrentAccountDb } from '../db/current-account-db';
+import type { CurrentAccount } from '../db/current-account-db';
 import type { CardRow } from '../db/local-db.model';
 import { EventsService } from '../events/events-service';
-import { SyncService } from '../sync/sync-service';
+import { CardMutationWriter } from '../sync/card-mutation-writer';
+import { accountLiveSignal } from './account-live-query';
 
 @Injectable({ providedIn: 'root' })
 export class CardsData {
-  private readonly localDb = inject(LocalDb);
-  private readonly cardsApi = inject(CardsApi);
-  private readonly syncService = inject(SyncService);
+  private readonly currentAccountDb = inject(CurrentAccountDb);
+  private readonly cardWriter = inject(CardMutationWriter);
   private readonly eventsService = inject(EventsService);
   private readonly injector = inject(Injector);
 
-  readonly allActive: Signal<readonly CardRow[]> = toSignal(from(liveQuery(() => this.fetchAllActive())), {
-    initialValue: [],
+  readonly allActive: Signal<readonly CardRow[]> = accountLiveSignal(this.injector, this.currentAccountDb, {
+    query: (account) => this.fetchAllActive(account), initialValue: [],
   });
 
   byDeck(deckId: string): Signal<readonly CardRow[]> {
-    return runInInjectionContext(this.injector, () =>
-      toSignal(from(liveQuery(() => this.fetchByDeck(deckId))), { initialValue: [] }),
-    );
+    return accountLiveSignal(this.injector, this.currentAccountDb, {
+      query: (account) => this.fetchByDeck(account, deckId), initialValue: [],
+    });
   }
 
   async create(deckId: string, request: CreateCardRequest): Promise<Card> {
-    const card = await this.cardsApi.create(deckId, request);
-    await this.localDb.cards.put(toCardRow(card));
-    void this.syncService.pull();
+    const card = await this.cardWriter.execute({
+      kind: 'card_create', deckId, cardId: request.id, type: request.type, front: request.front, back: request.back, source: request.source,
+    });
     void this.eventsService.record('card_created', { deckId, cardId: card.id });
     return card;
   }
 
-  async update(id: string, ifMatch: number, request: UpdateCardRequest): Promise<Card> {
-    const card = await this.cardsApi.update(id, ifMatch, request);
-    await this.localDb.cards.put(toCardRow(card));
-    void this.syncService.pull();
-    return card;
+  update(id: string, request: UpdateCardRequest): Promise<Card> {
+    return this.cardWriter.execute({ kind: 'card_update', cardId: id, changes: request });
   }
 
-  async delete(id: string, ifMatch: number): Promise<void> {
-    await this.cardsApi.delete(id, ifMatch);
-    await this.localDb.cards.delete(id);
-    void this.syncService.pull();
+  async delete(id: string): Promise<void> {
+    await this.cardWriter.execute({ kind: 'card_delete', cardId: id });
   }
 
-  private async fetchByDeck(deckId: string): Promise<CardRow[]> {
-    const cards = await this.localDb.cards.where('deckId').equals(deckId).toArray();
+  private async fetchByDeck(account: CurrentAccount, deckId: string): Promise<CardRow[]> {
+    const cards = await account.db.cards.where('deckId').equals(deckId).toArray();
     return cards.filter((card) => card.deletedAt === null);
   }
 
-  private async fetchAllActive(): Promise<CardRow[]> {
-    const cards = await this.localDb.cards.toArray();
+  private async fetchAllActive(account: CurrentAccount): Promise<CardRow[]> {
+    const cards = await account.db.cards.toArray();
     return cards.filter((card) => card.deletedAt === null);
   }
 }

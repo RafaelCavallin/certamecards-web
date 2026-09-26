@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import type { LocalDb } from '../db/local-db';
+import type { AccountDb } from '../db/account-db';
 import type { StudySessionStore } from './study-session-store';
 import { setupStudySessionStore } from './study-session-store-test-support';
 
-let db: LocalDb;
+let db: AccountDb;
 let store: StudySessionStore;
 
 beforeEach(async () => {

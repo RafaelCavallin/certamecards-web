@@ -1,8 +1,9 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, output } from "@angular/core";
 
-export type SyncIndicatorStatus = 'synced' | 'pending' | 'offline' | 'error';
+export type SyncIndicatorStatus = 'synced' | 'syncing' | 'pending' | 'offline' | 'error';
 const STATUS_LABELS: Record<SyncIndicatorStatus, string> = {
   synced: 'Sincronizado',
+  syncing: 'Sincronizando',
   pending: 'pendentes',
   offline: 'Sem conexão',
   error: 'Erro ao sincronizar',
@@ -14,6 +15,8 @@ const STATUS_LABELS: Record<SyncIndicatorStatus, string> = {
 export class SyncIndicator {
   readonly status = input.required<SyncIndicatorStatus>();
   readonly pendingCount = input(0);
+  readonly actionable = input(false);
+  readonly opened = output<void>();
   protected readonly label = computed(() => this.buildLabel());
 
   private buildLabel(): string {

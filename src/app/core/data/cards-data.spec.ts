@@ -1,43 +1,25 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, expect, it, vi } from 'vitest';
 import { waitFor } from '../../testing/dom-testing';
-import type { Card } from '../api/card.model';
-import { CardsApi } from '../api/cards-api';
-import { toCardRow } from '../db/card-row';
-import { LocalDb } from '../db/local-db';
+import { AccountDb } from '../db/account-db';
+import { CurrentAccountDb } from '../db/current-account-db';
 import { EventsService } from '../events/events-service';
-import { SyncService } from '../sync/sync-service';
 import { CardsData } from './cards-data';
 
-let db: LocalDb;
+let db: AccountDb;
 
-function aCard(overrides: Partial<Card> = {}): Card {
-  return {
-    id: 'c1',
-    deckId: 'd1',
-    type: 'basic',
-    front: 'Q',
-    back: 'R',
-    source: null,
-    createdAt: '2026-09-17T00:00:00Z',
-    updatedAt: '2026-09-17T00:00:00Z',
-    deletedAt: null,
-    version: 1,
-    changeSeq: 1,
-    ...overrides,
-  };
+function setup(): CardsData {
+  TestBed.configureTestingModule({ providers: [{ provide: EventsService, useValue: { record: vi.fn() } }] });
+  db = new AccountDb('cards-data-test');
+  TestBed.inject(CurrentAccountDb).set({ db, userId: 'cards-data-test' });
+  return TestBed.inject(CardsData);
 }
-function setup(cardsApi: Partial<CardsApi>): { cardsData: CardsData; syncPull: ReturnType<typeof vi.fn> } {
-  const syncPull = vi.fn().mockResolvedValue(undefined);
-  TestBed.configureTestingModule({
-    providers: [
-      { provide: CardsApi, useValue: cardsApi },
-      { provide: SyncService, useValue: { pull: syncPull } },
-      { provide: EventsService, useValue: { record: vi.fn() } },
-    ],
+async function givenDeck(): Promise<void> {
+  await db.decks.add({
+    id: 'd1', subjectId: 's1', name: 'CF/88', description: null, origin: 'own', originRef: null, originLabel: null,
+    officialStatus: null, cardCount: 0, contentUpdatedAt: null, createdAt: 'x', updatedAt: 'x', deletedAt: null,
+    version: 1, changeSeq: 1,
   });
-  db = TestBed.inject(LocalDb);
-  return { cardsData: TestBed.inject(CardsData), syncPull };
 }
 
 afterEach(async () => {
@@ -45,48 +27,42 @@ afterEach(async () => {
 });
 
 it('TU — byDeck devolve só os cartões não excluídos do deck', async () => {
-  const { cardsData } = setup({});
+  const cardsData = setup();
+  await givenDeck();
   await db.cards.bulkAdd([
-    toCardRow(aCard()),
-    toCardRow(aCard({ id: 'c2', deletedAt: '2026-09-18T00:00:00Z' })),
-    toCardRow(aCard({ id: 'c3', deckId: 'd2' })),
+    { id: 'c1', deckId: 'd1', type: 'basic', front: 'Q', back: 'R', source: null, createdAt: 'x', updatedAt: 'x', deletedAt: null, version: 1, changeSeq: 1, searchText: 'q r' },
+    { id: 'c2', deckId: 'd1', type: 'basic', front: 'Q2', back: 'R2', source: null, createdAt: 'x', updatedAt: 'x', deletedAt: 'x', version: 1, changeSeq: 1, searchText: 'q2 r2' },
+    { id: 'c3', deckId: 'd2', type: 'basic', front: 'Q3', back: 'R3', source: null, createdAt: 'x', updatedAt: 'x', deletedAt: null, version: 1, changeSeq: 1, searchText: 'q3 r3' },
   ]);
   const cards = cardsData.byDeck('d1');
   await waitFor(() => cards().length > 0);
   expect(cards().map((card) => card.id)).toEqual(['c1']);
 });
 
-it('TU — allActive devolve os cartões não excluídos de todos os decks', async () => {
-  const { cardsData } = setup({});
-  await db.cards.bulkAdd([
-    toCardRow(aCard()),
-    toCardRow(aCard({ id: 'c2', deckId: 'd2' })),
-    toCardRow(aCard({ id: 'c3', deletedAt: '2026-09-18T00:00:00Z' })),
-  ]);
-  await waitFor(() => cardsData.allActive().length > 0);
-  expect(cardsData.allActive().map((card) => card.id).sort()).toEqual(['c1', 'c2']);
-});
-
-it('TU — create grava o cartão com searchText e sincroniza', async () => {
-  const create = vi.fn().mockResolvedValue(aCard({ front: 'Mandado' }));
-  const { cardsData, syncPull } = setup({ create });
+it('TU-67 — create grava o cartão com searchText e a operação enfileirada', async () => {
+  const cardsData = setup();
+  await givenDeck();
   const created = await cardsData.create('d1', { id: 'c1', type: 'basic', front: 'Mandado', back: 'R', source: null });
   expect(created.front).toBe('Mandado');
   expect((await db.cards.get('c1'))?.searchText).toContain('mandado');
-  expect(syncPull).toHaveBeenCalledOnce();
+  expect(await db.syncOperations.where('entityId').equals('c1').count()).toBe(1);
 });
 
-it('TU — update grava o cartão atualizado', async () => {
-  const update = vi.fn().mockResolvedValue(aCard({ front: 'Nova pergunta', version: 2 }));
-  const { cardsData } = setup({ update });
-  await cardsData.update('c1', 1, { front: 'Nova pergunta' });
-  expect(await db.cards.get('c1')).toMatchObject({ front: 'Nova pergunta', version: 2 });
+it('TU-69 — criar e atualizar em sequência compacta em uma única operação pending', async () => {
+  const cardsData = setup();
+  await givenDeck();
+  await cardsData.create('d1', { id: 'c1', type: 'basic', front: 'Q', back: 'R', source: null });
+  await cardsData.update('c1', { front: 'Nova pergunta' });
+  expect(await db.cards.get('c1')).toMatchObject({ front: 'Nova pergunta' });
+  const ops = await db.syncOperations.where('entityId').equals('c1').toArray();
+  expect(ops).toHaveLength(1);
+  expect(ops[0]?.kind).toBe('card_create');
 });
 
-it('TU — delete remove o cartão do Dexie', async () => {
-  const deleteFn = vi.fn().mockResolvedValue(undefined);
-  const { cardsData } = setup({ delete: deleteFn });
-  await db.cards.add(toCardRow(aCard()));
-  await cardsData.delete('c1', 1);
-  expect(await db.cards.get('c1')).toBeUndefined();
+it('TU — delete marca o cartão como excluído', async () => {
+  const cardsData = setup();
+  await givenDeck();
+  await cardsData.create('d1', { id: 'c1', type: 'basic', front: 'Q', back: 'R', source: null });
+  await cardsData.delete('c1');
+  expect((await db.cards.get('c1'))?.deletedAt).not.toBeNull();
 });

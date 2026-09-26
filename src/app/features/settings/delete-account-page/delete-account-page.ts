@@ -6,7 +6,9 @@ import { AuthApi } from '../../../core/api/auth-api';
 import { AUTH_PATHS } from '../../../core/auth/auth-constants';
 import { AuthStore } from '../../../core/auth/auth-store';
 import { parseFragmentToken } from '../../../core/auth/fragment-token';
+import { ConnectivityStore } from '../../../core/connectivity/connectivity-store';
 import { deleteAccountErrorMessage } from './delete-account-errors';
+import { environment } from '../../../../environments/environment';
 
 type DeleteAccountStep = 'form' | 'confirm';
 @Component({
@@ -19,7 +21,9 @@ export class DeleteAccountPage {
   private readonly authStore = inject(AuthStore);
   private readonly reauthToken = parseFragmentToken(inject(ActivatedRoute).snapshot.fragment, 'reauth');
 
+  protected readonly online = inject(ConnectivityStore).online;
   protected readonly googleReauthUrl = `${AUTH_PATHS.googleAuthorization}?intent=reauth`;
+  protected readonly googleSignInEnabled = environment.googleSignInEnabled;
   protected readonly hasReauthToken = this.reauthToken !== '';
   protected readonly step = signal<DeleteAccountStep>(this.hasReauthToken ? 'confirm' : 'form');
   protected readonly submitting = signal(false);

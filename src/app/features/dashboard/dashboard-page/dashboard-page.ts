@@ -8,7 +8,7 @@ import { SettingsData } from '../../../core/data/settings-data';
 import { SubjectsData } from '../../../core/data/subjects-data';
 import { deckBadges } from '../../../core/library/deck-badges';
 import { AuthStore } from '../../../core/auth/auth-store';
-import { SyncService } from '../../../core/sync/sync-service';
+import { SyncStatusStore } from '../../../core/sync/sync-status-store';
 import { Button } from '../../../shared/ui/button/button';
 import { DeckRow } from '../../../shared/ui/deck-row/deck-row';
 import { SignOutButton } from '../../settings/sign-out-button/sign-out-button';
@@ -35,7 +35,7 @@ export class DashboardPage {
   private readonly settingsData = inject(SettingsData);
   private readonly subjectsData = inject(SubjectsData);
   private readonly router = inject(Router);
-  protected readonly syncService = inject(SyncService);
+  protected readonly syncService = inject(SyncStatusStore);
   protected readonly badgesOf = deckBadges;
   protected readonly selectedSubjectId = signal<string>(ALL_SUBJECTS);
   protected readonly settingsOpen = signal(false);
@@ -82,6 +82,10 @@ export class DashboardPage {
 
   protected onOpenDeck(deckId: string): void {
     void this.router.navigate(['/decks', deckId]);
+  }
+
+  protected onOpenSync(): void {
+    void this.router.navigate(['/sincronizacao']);
   }
 
   protected onNewDeck(): void {

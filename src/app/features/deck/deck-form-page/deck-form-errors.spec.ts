@@ -1,24 +1,19 @@
 import { expect, it } from 'vitest';
+import { LocalMutationValidationError, LocalStorageFullError } from '../../../core/sync/local-storage-error';
 import { deckFormErrorMessage } from './deck-form-errors';
 
-it('TU — mensagem padrão quando não há ApiError', () => {
-  expect(deckFormErrorMessage(null)).toBe('Não foi possível salvar o deck. Tente de novo.');
+it('TU — mensagem padrão quando o erro é desconhecido', () => {
+  expect(deckFormErrorMessage(new Error('x'))).toBe('Não foi possível salvar o deck. Tente de novo.');
 });
 
-it('TU — mensagem específica para matéria desativada', () => {
-  expect(
-    deckFormErrorMessage({ type: 'x', title: 'x', status: 422, code: 'subject_inactive', detail: 'x' }),
-  ).toBe('Essa matéria foi desativada. Escolha outra.');
+it('TU — mensagem específica para matéria indisponível offline', () => {
+  expect(deckFormErrorMessage(new LocalMutationValidationError('subject_inactive', 'x'))).toBe(
+    'Essa matéria não está disponível para uso offline.',
+  );
 });
 
-it('TU — junta as mensagens de validação por campo', () => {
-  const message = deckFormErrorMessage({
-    type: 'x',
-    title: 'x',
-    status: 400,
-    code: 'validation_failed',
-    detail: 'x',
-    fields: [{ field: 'name', code: 'required', message: 'Preencha o nome.' }],
-  });
-  expect(message).toBe('Preencha o nome.');
+it('TU-68 — mensagem de espaço esgotado quando a transação é abortada por quota', () => {
+  expect(deckFormErrorMessage(new LocalStorageFullError())).toBe(
+    'Não há espaço suficiente no dispositivo para guardar essa alteração. O texto continua no formulário: libere espaço no dispositivo e salve de novo.',
+  );
 });

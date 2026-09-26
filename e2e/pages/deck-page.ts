@@ -5,14 +5,16 @@ export class DeckPage {
   readonly frontField: Locator;
   readonly backField: Locator;
   readonly cardSubmitButton: Locator;
-  readonly offlineNotice: Locator;
+  // O deck também tem seu próprio botão "Excluir" (excluir o deck); este é só o da ficha do
+  // cartão aberta, senão o locator casaria com os dois.
+  readonly deleteCardButton: Locator;
 
   constructor(private readonly page: Page) {
     this.newCardButton = page.getByRole('button', { name: 'Novo cartão' });
     this.frontField = page.getByLabel('Pergunta');
     this.backField = page.getByLabel('Resposta');
     this.cardSubmitButton = page.locator('dialog[open]').getByRole('button', { name: /Salvar/ });
-    this.offlineNotice = page.locator('dialog[open]').getByText('Isso precisa de conexão.');
+    this.deleteCardButton = page.locator('dialog[open]').getByRole('button', { name: 'Excluir', exact: true });
   }
 
   async goto(deckId: string): Promise<void> {

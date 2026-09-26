@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { extractApiError } from '../api/api-error.model';
 import type { CreateErrorReportRequest } from '../api/error-report.model';
 import { ErrorReportsApi } from '../api/error-reports-api';
+import { CurrentAccountDb } from '../db/current-account-db';
 import { LocalDb } from '../db/local-db';
 import { EventsService } from '../events/events-service';
 import { libraryErrorMessage } from './library-messages';
@@ -12,6 +13,7 @@ const ALREADY_SENT_CODE = 'report_already_sent';
 export class ErrorReportFlow {
   private readonly api = inject(ErrorReportsApi);
   private readonly localDb = inject(LocalDb);
+  private readonly currentAccountDb = inject(CurrentAccountDb);
   private readonly events = inject(EventsService);
   private cardId: string | null = null;
 
@@ -57,7 +59,8 @@ export class ErrorReportFlow {
   }
 
   private async recordReported(cardId: string, request: CreateErrorReportRequest): Promise<void> {
-    const deckId = (await this.localDb.cards.get(cardId))?.deckId ?? null;
+    const db = this.currentAccountDb.current()?.db;
+    const deckId = (await db?.cards.get(cardId))?.deckId ?? null;
     void this.events.record('card_error_reported', { deckId, reason: request.reason });
   }
 

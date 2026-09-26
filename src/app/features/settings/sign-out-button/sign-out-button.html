@@ -2,15 +2,41 @@
 <dialog
   #dialog
   class="w-full max-w-[420px] rounded-lg border-0 bg-surface-raised p-6 text-ink backdrop:bg-black/50"
-  (cancel)="onCancel()"
+  (cancel)="onStay()"
 >
-  <h2 class="font-sans text-lg font-semibold text-ink">Avaliações pendentes</h2>
-  <p class="mt-2 text-sm text-ink-muted">
-    Há avaliações que ainda não foram sincronizadas. Aguarde a sincronização ou saia mesmo assim.
-  </p>
-  <div class="mt-6 flex justify-end gap-2">
-    <button appButton variant="ghost" type="button" (click)="onCancel()">Cancelar</button>
-    <button appButton variant="quiet" type="button" (click)="onLeaveAnyway()">Sair mesmo assim</button>
-    <button appButton type="button" (click)="onWait()">Aguardar</button>
-  </div>
+  @switch (dialogState()) {
+    @case ('choice') {
+      <h2 class="font-sans text-lg font-semibold text-ink">Há alterações que ainda não foram sincronizadas</h2>
+      <p class="mt-2 text-sm text-ink-muted">
+        {{ pendingCount() }} {{ pendingCount() === 1 ? 'alteração' : 'alterações' }} ainda não
+        {{ pendingCount() === 1 ? 'foi enviada' : 'foram enviadas' }} ao servidor.
+        @if (!online()) {
+          Sem conexão agora, o recomendado é permanecer na conta até sincronizar.
+        }
+      </p>
+      @if (logoutFailed()) {
+        <p class="mt-2 text-sm text-rate-again" role="alert">Não foi possível concluir a saída. Tente novamente.</p>
+      }
+      <div class="mt-6 flex flex-wrap justify-end gap-2">
+        <button appButton variant="ghost" type="button" (click)="onStay()">Permanecer na conta</button>
+        <button appButton variant="quiet" type="button" (click)="onRequestDiscard()">Sair sem sincronizar</button>
+        <button appButton type="button" [disabled]="!online()" (click)="onSyncAndSignOut()">Sincronizar e sair</button>
+      </div>
+    }
+    @case ('discardConfirm') {
+      <h2 class="font-sans text-lg font-semibold text-ink">Descartar alterações não sincronizadas?</h2>
+      <p class="mt-2 text-sm text-ink-muted">
+        {{ pendingCount() }} {{ pendingCount() === 1 ? 'alteração' : 'alterações' }}
+        {{ pendingCount() === 1 ? 'será perdida' : 'serão perdidas' }} para sempre: o servidor não poderá
+        recuperá-las depois que você sair.
+      </p>
+      @if (logoutFailed()) {
+        <p class="mt-2 text-sm text-rate-again" role="alert">Não foi possível concluir a saída. Tente novamente.</p>
+      }
+      <div class="mt-6 flex justify-end gap-2">
+        <button appButton variant="ghost" type="button" (click)="onBackToChoice()">Voltar</button>
+        <button appButton variant="quiet" type="button" (click)="onConfirmDiscard()">Descartar e sair</button>
+      </div>
+    }
+  }
 </dialog>

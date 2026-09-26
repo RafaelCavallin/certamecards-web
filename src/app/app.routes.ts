@@ -21,6 +21,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/library/library-page/library-page').then((m) => m.LibraryPage),
   },
   {
+    path: 'sincronizacao',
+    canActivate: [authGuard, termsGuard],
+    loadChildren: () => import('./features/sync/sync.routes').then((m) => m.SYNC_ROUTES),
+  },
+  {
     path: 'estudar',
     canActivate: [authGuard, termsGuard],
     loadChildren: () => import('./features/study/study.routes').then((m) => m.STUDY_ROUTES),

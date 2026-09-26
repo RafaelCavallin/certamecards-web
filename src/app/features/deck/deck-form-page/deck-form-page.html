@@ -3,5 +3,5 @@
   @if (errorMessage(); as message) {
     <p class="text-sm text-rate-again" role="alert" aria-live="assertive">{{ message }}</p>
   }
-  <app-deck-form [subjects]="subjectsData.active()" [online]="connectivity.online()" (saved)="onSaved($event)" />
+  <app-deck-form [subjects]="subjectsData.active()" (saved)="onSaved($event)" />
 </main>

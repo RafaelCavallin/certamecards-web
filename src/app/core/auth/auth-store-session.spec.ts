@@ -1,31 +1,43 @@
 import { expect, it } from 'vitest';
-import { AUTH_RESPONSE, AUTH_USER, setupAuthStore } from '../../testing/auth-store-harness';
+import { AUTH_RESPONSE, AUTH_USER, setOnline, setupAuthStore } from '../../testing/auth-store-harness';
 
-it('TU — setSession grava a sessão localmente e marca o usuário como autenticado', async () => {
-  const { store, localDb } = setupAuthStore();
-  store.setSession(AUTH_RESPONSE);
-  await Promise.resolve();
-  expect(localDb.session).toEqual({
+it('TU — initialize com rede aplica a sessão devolvida pelo refresh', async () => {
+  const { store, authApi } = setupAuthStore();
+  setOnline(true);
+  authApi.refresh.mockResolvedValue(AUTH_RESPONSE);
+  await store.initialize();
+  expect(store.user()).toEqual(AUTH_USER);
+  expect(store.accessToken()).toBe('token-1');
+  expect(store.initializing()).toBe(false);
+});
+
+it('TU — initialize com rede e refresh recusado deixa o usuário deslogado', async () => {
+  const { store, authApi } = setupAuthStore();
+  setOnline(true);
+  authApi.refresh.mockRejectedValue(new Error('network down'));
+  await store.initialize();
+  expect(store.user()).toBeNull();
+  expect(store.isAuthenticated()).toBe(false);
+});
+
+it('TU — initialize sem rede carrega a sessão guardada localmente', async () => {
+  const { store, authApi, bootstrapDb } = setupAuthStore();
+  setOnline(false);
+  await bootstrapDb.setSession({
     userId: 'user-1',
     email: 'ana@exemplo.com',
     displayName: 'Ana',
     role: 'candidate',
     termsAccepted: true,
   });
-  expect(store.isAuthenticated()).toBe(true);
+  await store.initialize();
+  expect(store.user()).toEqual(AUTH_USER);
+  expect(authApi.refresh).not.toHaveBeenCalled();
 });
 
-it('TU — isAdmin reflete o papel do usuário autenticado', () => {
+it('TU — initialize sem rede e sem sessão local mantém o usuário deslogado', async () => {
   const { store } = setupAuthStore();
-  store.setSession({ ...AUTH_RESPONSE, user: { ...AUTH_USER, role: 'admin' } });
-  expect(store.isAdmin()).toBe(true);
-});
-
-it('TU — updateUser atualiza o usuário sem passar pelo servidor', async () => {
-  const { store, localDb } = setupAuthStore();
-  store.setSession(AUTH_RESPONSE);
-  store.updateUser({ ...AUTH_USER, displayName: 'Ana Paula' });
-  expect(store.user()?.displayName).toBe('Ana Paula');
-  await Promise.resolve();
-  expect(localDb.session?.displayName).toBe('Ana Paula');
+  setOnline(false);
+  await store.initialize();
+  expect(store.user()).toBeNull();
 });

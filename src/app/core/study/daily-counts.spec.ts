@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import type { ReviewLogRow } from '../db/local-db.model';
+import type { ReviewLogRow } from '../db/account-db.model';
 import { dailyCounts } from './daily-counts';
 import type { StudyDayWindow } from './queue.model';
 
@@ -9,7 +9,8 @@ function aLog(overrides: Partial<ReviewLogRow> = {}): ReviewLogRow {
   return {
     id: 'log-1', cardId: 'c1', kind: 'review', rating: 3, reviewedAt: '2026-09-18T12:00:00Z',
     durationMs: 1000, stateBefore: null, stateAfter: {}, offline: false, deviceId: 'device-1',
-    sessionId: null, changeSeq: 1, voided: false, ...overrides,
+    sessionId: null, changeSeq: 1, voided: false, eventAt: '2026-09-18T12:00:00Z', eventCounter: 0,
+    eventDeviceId: 'device-1', operationId: 'log-1', ...overrides,
   };
 }
 

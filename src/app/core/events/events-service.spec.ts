@@ -2,12 +2,13 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, expect, it, vi } from 'vitest';
 import { EventsApi } from '../api/events-api';
 import { ConnectivityStore } from '../connectivity/connectivity-store';
-import { LocalDb } from '../db/local-db';
+import { AccountDb } from '../db/account-db';
+import { CurrentAccountDb } from '../db/current-account-db';
 import type { ProductEvent } from './event.model';
 import { MAX_LOCAL_EVENTS } from './events-constants';
 import { EventsService } from './events-service';
 
-let db: LocalDb;
+let db: AccountDb;
 const reportHttpStatus = vi.fn();
 
 function setup(submitImpl: ReturnType<typeof vi.fn>, online = true): EventsService {
@@ -17,7 +18,8 @@ function setup(submitImpl: ReturnType<typeof vi.fn>, online = true): EventsServi
       { provide: ConnectivityStore, useValue: { online: () => online, reportHttpStatus } },
     ],
   });
-  db = TestBed.inject(LocalDb);
+  db = new AccountDb('events-service-test');
+  TestBed.inject(CurrentAccountDb).set({ db, userId: 'events-service-test' });
   return TestBed.inject(EventsService);
 }
 
@@ -65,4 +67,19 @@ it('TU — record descarta os eventos mais antigos acima do limite local', async
   const count = await db.events.count();
   expect(count).toBe(MAX_LOCAL_EVENTS);
   expect(await db.events.get('seed-0')).toBeUndefined();
+});
+
+it('TU — record não grava nem envia quando não há conta ativa', async () => {
+  const submit = vi.fn();
+  TestBed.configureTestingModule({
+    providers: [
+      { provide: EventsApi, useValue: { submit } },
+      { provide: ConnectivityStore, useValue: { online: () => true, reportHttpStatus } },
+    ],
+  });
+  db = new AccountDb('events-service-test-no-account');
+  const eventsService = TestBed.inject(EventsService);
+  await eventsService.record('deck_created', { deckId: 'd1' });
+  await eventsService.flush();
+  expect(submit).not.toHaveBeenCalled();
 });

@@ -58,11 +58,11 @@ test.describe('sem rede', () => {
     await rateAllCards(page, OFFLINE_DECK_CARDS);
     const reset = page.getByRole('button', { name: 'Zerar progresso' });
     await gotoOfflineWithRetry(page, `/decks/${deck.deckId}`, reset);
-    await expect(reset).toBeDisabled();
-    await expect(page.getByText(/Isso precisa de conexão: zerar progresso/)).toBeVisible();
+    await expect(reset).toBeEnabled();
+    await expect(page.getByText('Isso precisa de conexão: duplicar, cancelar a inscrição.')).toBeVisible();
     await new DeckPage(page).openCard('Pergunta 0');
-    await expect(page.getByRole('button', { name: 'Suspender' })).toBeDisabled();
-    await expect(page.locator('dialog[open]').getByText('Isso precisa de conexão.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Suspender' })).toBeEnabled();
+    await expect(page.locator('dialog[open]').getByText('Isso precisa de conexão.')).toHaveCount(0);
     await context.setOffline(false);
     const dashboard = new DashboardPage(page);
     await gotoOfflineWithRetry(page, '/', dashboard.syncStatus);

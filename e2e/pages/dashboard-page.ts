@@ -13,7 +13,7 @@ export class DashboardPage {
     this.newDeckButton = page.getByRole('button', { name: 'Novo deck' });
     this.startSessionButton = page.getByRole('button', { name: 'Começar sessão' });
     this.allCaughtUpButton = page.getByRole('button', { name: 'Tudo em dia' });
-    this.syncStatus = page.getByRole('status');
+    this.syncStatus = page.getByRole('button', { name: /^(Sincronizado|Sincronizando|Sem conexão|\d+ pendentes|Erro ao sincronizar)/ });
     this.signOutButton = page.getByRole('button', { name: 'Sair', exact: true });
     this.settingsButton = page.getByRole('button', { name: 'Ajustes' });
     this.last14Days = page.getByRole('region', { name: 'Últimos 14 dias' });

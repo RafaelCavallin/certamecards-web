@@ -1,6 +1,9 @@
 <app-sheet [open]="open()" [title]="cardId() === null ? 'Novo cartão' : 'Editar cartão'" (closed)="onClose()">
+  @if (errorMessage(); as message) {
+    <p class="mb-4 text-sm text-rate-again" role="alert" aria-live="assertive">{{ message }}</p>
+  }
   @if (open()) {
-    <app-card-form [initial]="initialModel()" [online]="connectivity.online()" (saved)="onSave($event)" />
+    <app-card-form [initial]="initialModel()" [keepOnSave]="true" [saving]="saving()" (saved)="onSave($event)" />
   }
   @if (cardId() !== null) {
     <div class="mt-6 space-y-3 border-t border-line pt-4">
@@ -13,10 +16,10 @@
         </p>
       }
       <div class="flex gap-2">
-        <button appButton size="sm" type="button" [disabled]="!connectivity.online()" (click)="onToggleSuspend()">
+        <button appButton size="sm" type="button" (click)="onToggleSuspend()">
           {{ isSuspended() ? 'Reativar' : 'Suspender' }}
         </button>
-        <button appButton variant="ghost" size="sm" type="button" [disabled]="!connectivity.online()" (click)="onDelete()">
+        <button appButton variant="ghost" size="sm" type="button" (click)="onDelete()">
           Excluir
         </button>
       </div>

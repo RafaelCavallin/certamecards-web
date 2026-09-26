@@ -1,5 +1,5 @@
 import type { WritableSignal } from '@angular/core';
-import { form, maxLength, required, type FieldTree } from '@angular/forms/signals';
+import { disabled, form, maxLength, required, type FieldTree } from '@angular/forms/signals';
 
 const FRONT_MAX_LENGTH = 1000;
 const BACK_MAX_LENGTH = 2000;
@@ -12,8 +12,12 @@ export interface CardFormModel {
 export function emptyCardFormModel(): CardFormModel {
   return { front: '', back: '', source: '' };
 }
-export function buildCardForm(model: WritableSignal<CardFormModel>): FieldTree<CardFormModel> {
+export function buildCardForm(
+  model: WritableSignal<CardFormModel>,
+  isSaving: () => boolean = () => false,
+): FieldTree<CardFormModel> {
   return form(model, (schemaPath) => {
+    disabled(schemaPath, { when: isSaving });
     required(schemaPath.front, { message: 'Informe a pergunta.' });
     maxLength(schemaPath.front, FRONT_MAX_LENGTH, { message: 'Use até 1.000 caracteres.' });
     required(schemaPath.back, { message: 'Informe a resposta.' });

@@ -6,7 +6,7 @@ export async function saveDeckEdit(decksData: DecksData, deck: Deck | undefined,
   if (deck === undefined) {
     return;
   }
-  await decksData.update(deck.id, deck.version, {
+  await decksData.update(deck.id, {
     subjectId: value.subjectId,
     name: value.name,
     description: value.description === '' ? null : value.description,

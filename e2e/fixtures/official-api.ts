@@ -72,3 +72,16 @@ export async function subscribeByApi(candidate: Candidate, deckId: string): Prom
     await api.dispose();
   }
 }
+export async function deleteOfficialCard(admin: Candidate, deckId: string, cardId: string): Promise<void> {
+  const api = await openApi(admin);
+  try {
+    const page = (await (await api.get(`/api/admin/official-decks/${deckId}/cards`)).json()) as {
+      readonly items: readonly { readonly id: string; readonly version: number }[];
+    };
+    const card = page.items.find((item) => item.id === cardId);
+    const headers = { 'If-Match': String(card?.version ?? 0) };
+    await expectOk(await api.delete(`/api/admin/official-cards/${cardId}`, { headers }), 'remover cartão oficial');
+  } finally {
+    await api.dispose();
+  }
+}

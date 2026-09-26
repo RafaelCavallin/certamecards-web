@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { expect, it } from 'vitest';
 import type { CardState } from '../api/card-state.model';
-import type { ReviewLogRow } from '../db/local-db.model';
+import type { ReviewLogRow } from '../db/account-db.model';
 import { SchedulerService } from './scheduler-service';
 import type { Rating } from './scheduler.model';
 
@@ -19,8 +19,9 @@ interface LogForInput {
 
 function logFor(input: LogForInput): ReviewLogRow {
   const { cardId, step, before, after } = input;
+  const id = `${cardId}-${step.reviewedAt}`;
   return {
-    id: `${cardId}-${step.reviewedAt}`,
+    id,
     cardId,
     kind: 'review',
     rating: step.rating,
@@ -33,6 +34,10 @@ function logFor(input: LogForInput): ReviewLogRow {
     sessionId: null,
     changeSeq: 1,
     voided: false,
+    eventAt: step.reviewedAt,
+    eventCounter: 0,
+    eventDeviceId: 'device-1',
+    operationId: id,
   };
 }
 
@@ -77,7 +82,7 @@ it('TU-04 — replay ignora anuladas e trata reset', () => {
   expect(replayed).toEqual({ ...secondApplied.state, reviewCount: 2 });
 });
 
-it('TU-05 — replay ordena por (reviewedAt, id)', () => {
+it('TU-05 — replay ordena pela ordem canônica independentemente da ordem de chegada', () => {
   const scheduler = setup();
   const firstNow = new Date('2026-09-17T12:00:00Z');
   const secondNow = new Date('2026-09-18T12:00:00Z');
@@ -87,4 +92,26 @@ it('TU-05 — replay ordena por (reviewedAt, id)', () => {
   const secondLog = logFor({ cardId: 'card-1', step: { rating: 4, reviewedAt: secondNow.toISOString() }, before: firstApplied.state, after: secondApplied.state });
   const replayedInOrder = scheduler.replay([secondLog, firstLog]);
   expect(replayedInOrder).toEqual(secondApplied.state);
+});
+
+it('TU-76 — mesmo eventAt desempata por eventCounter, depois eventDeviceId, depois operationId', () => {
+  const scheduler = setup();
+  const base = logFor({
+    cardId: 'card-1', step: { rating: 3, reviewedAt: '2026-09-17T12:00:00Z' }, before: null,
+    after: { cardId: 'card-1', state: 1, stability: 1, difficulty: 1, due: '2026-09-18T00:00:00Z', lastReview: null, reps: 1, lapses: 0, learningSteps: 1, scheduledDays: 0, reviewCount: 1, suspended: false, contentUpdateNote: null, contentUpdatedAt: null, changeSeq: 0 },
+  });
+  const earlierCounter = { ...base, id: 'a', eventCounter: 0 };
+  const laterCounter = { ...base, id: 'b', kind: 'reset' as const, rating: null, eventCounter: 1 };
+  const replayed = scheduler.replay([laterCounter, earlierCounter]);
+  expect(replayed).toBeNull();
+});
+
+it('TU-76 — reset chega primeiro no array mas com ordem canônica posterior, então ele ainda vence', () => {
+  const scheduler = setup();
+  const now = new Date('2026-09-17T12:00:00Z');
+  const applied = scheduler.apply(null, 3, now);
+  const reviewLog = logFor({ cardId: 'card-1', step: { rating: 3, reviewedAt: now.toISOString() }, before: null, after: applied.state });
+  const resetLog: ReviewLogRow = { ...reviewLog, id: 'reset-later', kind: 'reset', rating: null, eventCounter: 1 };
+  const replayed = scheduler.replay([resetLog, { ...reviewLog, eventCounter: 0 }]);
+  expect(replayed).toBeNull();
 });

@@ -4,7 +4,8 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { expect, it, vi } from 'vitest';
 import { AuthApi } from '../../../core/api/auth-api';
 import { AuthStore } from '../../../core/auth/auth-store';
-import { clickElement, exists, rootText, setInputValue, submitForm, textContent } from '../../../testing/dom-testing';
+import { ConnectivityStore } from '../../../core/connectivity/connectivity-store';
+import { clickElement, exists, queryElement, rootText, setInputValue, submitForm, textContent } from '../../../testing/dom-testing';
 import { DeleteAccountPage } from './delete-account-page';
 
 interface Harness {
@@ -12,7 +13,7 @@ interface Harness {
   readonly logout: ReturnType<typeof vi.fn>;
 }
 
-function setup(fragment: string | null): Harness {
+function setup(fragment: string | null, online = true): Harness {
   const deleteAccount = vi.fn();
   const logout = vi.fn().mockResolvedValue(undefined);
   TestBed.configureTestingModule({
@@ -22,6 +23,7 @@ function setup(fragment: string | null): Harness {
       { provide: AuthApi, useValue: { deleteAccount } },
       { provide: AuthStore, useValue: { logout } },
       { provide: ActivatedRoute, useValue: { snapshot: { fragment } } },
+      { provide: ConnectivityStore, useValue: { online: () => online } },
     ],
   });
   return { deleteAccount, logout };
@@ -69,4 +71,22 @@ it('TU — senha incorreta mostra a mensagem de erro sem sair da confirmação',
   await fixture.whenStable();
   fixture.detectChanges();
   expect(textContent(fixture, '[role="alert"][aria-live]')).toContain('Senha incorreta');
+});
+
+it('TU-82 — sem rede, a confirmação de exclusão fica indisponível com o motivo visível', () => {
+  setup('reauth=google-token', false);
+  const fixture = TestBed.createComponent(DeleteAccountPage);
+  fixture.detectChanges();
+  const confirmButton = queryElement(fixture, 'button[type="button"]') as HTMLButtonElement | null;
+  expect(confirmButton?.disabled).toBe(true);
+  expect(rootText(fixture)).toContain('precisa de conexão');
+});
+
+it('TU — o acesso com o Google fica oculto nesta versão', () => {
+  setup(null);
+  const fixture = TestBed.createComponent(DeleteAccountPage);
+  fixture.detectChanges();
+  const html = (fixture.nativeElement as HTMLElement).innerHTML;
+  expect(html).not.toContain('Google');
+  expect(html).not.toContain('oauth2/authorization');
 });

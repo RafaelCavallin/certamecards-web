@@ -1,10 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, expect, it } from 'vitest';
 import type { CardState } from '../api/card-state.model';
-import { LocalDb } from '../db/local-db';
+import { AccountDb } from '../db/account-db';
+import { CurrentAccountDb } from '../db/current-account-db';
 import { ReviewWriter } from './review-writer';
 
-let db: LocalDb;
+let db: AccountDb;
 
 const STATE_WITH_NOTICE: CardState = {
   cardId: 'c1', state: 2, stability: 4, difficulty: 5, due: '2026-09-18T08:00:00Z',
@@ -19,7 +20,8 @@ afterEach(async () => {
 
 it('TU-43 — record limpa o aviso de atualização do estado local ao gravar a avaliação', async () => {
   TestBed.configureTestingModule({});
-  db = TestBed.inject(LocalDb);
+  db = new AccountDb('review-writer-notice-test');
+  TestBed.inject(CurrentAccountDb).set({ db, userId: 'review-writer-notice-test' });
   await TestBed.inject(ReviewWriter).record({
     log: {
       id: 'l1', cardId: 'c1', kind: 'review', rating: 3, reviewedAt: '2026-09-18T09:00:00Z', durationMs: 1000,

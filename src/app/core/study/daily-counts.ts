@@ -1,5 +1,5 @@
 import { CARD_STATE_NEW } from '../api/card-state.model';
-import type { ReviewLogRow } from '../db/local-db.model';
+import type { ReviewLogRow } from '../db/account-db.model';
 import type { StudyDayWindow } from './queue.model';
 
 const MIN_CORRECT_RATING = 3;

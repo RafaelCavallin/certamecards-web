@@ -1,0 +1,26 @@
+<section class="space-y-4" aria-label="Comparação de versões">
+  <h2 class="font-sans text-lg font-semibold text-ink" tabindex="-1">Comparar versões</h2>
+  <p class="text-sm text-ink-muted">Os campos marcados como “alterado” diferem entre as duas versões.</p>
+  <div class="grid gap-6 sm:grid-cols-2">
+    <div class="space-y-3">
+      <h3 class="text-sm font-semibold text-ink">Versão atual</h3>
+      @if (currentDeleted()) {
+        <p class="text-sm text-ink-muted">Este item foi excluído e continua excluído.</p>
+      } @else {
+        <dl class="space-y-3">
+          @for (field of currentFields(); track field.key) {
+            <div><dt class="text-xs font-medium text-ink-muted">{{ field.label }}{{ field.changed ? ' · alterado' : '' }}</dt><dd class="whitespace-pre-wrap break-words text-sm text-ink">{{ field.value }}</dd></div>
+          }
+        </dl>
+      }
+    </div>
+    <div class="space-y-3">
+      <h3 class="text-sm font-semibold text-ink">Versão guardada</h3>
+      <dl class="space-y-3">
+        @for (field of savedFields(); track field.key) {
+          <div><dt class="text-xs font-medium text-ink-muted">{{ field.label }}{{ field.changed ? ' · alterado' : '' }}</dt><dd class="whitespace-pre-wrap break-words text-sm text-ink">{{ field.value }}</dd></div>
+        }
+      </dl>
+    </div>
+  </div>
+</section>

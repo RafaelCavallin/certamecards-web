@@ -21,7 +21,7 @@ export class GoogleCompletePage {
   private async complete(): Promise<void> {
     try {
       const response = await this.authApi.refresh();
-      this.authStore.setSession(response);
+      await this.authStore.setSession(response);
       await this.router.navigateByUrl(postLoginRedirectPath(response.user.termsAccepted));
     } catch {
       await this.router.navigate([AUTH_PATHS.login], { queryParams: { erro: 'google' } });

@@ -78,10 +78,10 @@ it('CA-22 — Apontar erro abre o formulário, envia e devolve o foco ao botão'
   expect(document.activeElement).toBe(trigger);
 });
 
-it('CA-04 — sem rede, suspender e apontar erro ficam indisponíveis com o motivo', () => {
+it('CA-04 — sem rede, suspender continua disponível e apontar erro fica indisponível com o motivo', () => {
   const { fixture } = setup(false);
   const buttons = queryAll(fixture, 'button') as HTMLButtonElement[];
-  expect(buttons.find((button) => button.textContent?.trim() === 'Suspender')?.disabled).toBe(true);
+  expect(buttons.find((button) => button.textContent?.trim() === 'Suspender')?.disabled).toBe(false);
   expect(buttons.find((button) => button.textContent?.trim() === 'Apontar erro')?.disabled).toBe(true);
-  expect(rootText(fixture)).toContain('Isso precisa de conexão.');
+  expect(rootText(fixture)).toContain('Apontar erro precisa de conexão.');
 });

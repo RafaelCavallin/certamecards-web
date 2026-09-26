@@ -53,7 +53,7 @@ export class GoogleLinkPage {
   private async attemptLink(): Promise<void> {
     try {
       const response = await this.authApi.linkGoogle({ token: this.linkToken, password: this.model().password });
-      this.authStore.setSession(response);
+      await this.authStore.setSession(response);
       await this.router.navigateByUrl(postLoginRedirectPath(response.user.termsAccepted));
     } catch (error) {
       this.errorMessage.set(linkErrorMessage(extractApiError(error)));

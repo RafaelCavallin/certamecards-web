@@ -1,4 +1,4 @@
-type StoreDefinitions = Readonly<Record<string, string>>;
+export type StoreDefinitions = Readonly<Record<string, string>>;
 // boolean e null não são chaves válidas no IndexedDB: active, deletedAt e suspended
 // ficam de fora do índice e são filtrados em memória por quem lê.
 const STORES_V1: StoreDefinitions = {

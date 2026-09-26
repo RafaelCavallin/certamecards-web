@@ -1,9 +1,11 @@
+import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import type { LocalDb } from '../../../core/db/local-db';
-import { clickElement, queryElement, rootText, waitFor } from '../../../testing/dom-testing';
+import type { AccountDb } from '../../../core/db/account-db';
+import { StudySessionStore } from '../../../core/study/study-session-store';
+import { clickElement, exists, queryElement, rootText, waitFor } from '../../../testing/dom-testing';
 import { setupStudyPage } from './study-page-test-support';
 
-let db: LocalDb;
+let db: AccountDb;
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
@@ -12,6 +14,8 @@ beforeEach(() => {
 
 afterEach(async () => {
   vi.useRealTimers();
+  await TestBed.inject(StudySessionStore).flushPendingWrites();
+  TestBed.resetTestingModule();
   await db.delete();
 });
 
@@ -34,6 +38,7 @@ it('E2E-03 — avalia com a tecla 3 e avança para o próximo cartão', async ()
   document.dispatchEvent(new KeyboardEvent('keydown', { key: '3', cancelable: true }));
   fixture.detectChanges();
   await fixture.whenStable();
+  await TestBed.inject(StudySessionStore).flushPendingWrites();
   expect(await db.reviewLogs.count()).toBe(1);
 });
 
@@ -54,4 +59,11 @@ it('TU — mostra a tela de tudo em dia quando não há cartões', async () => {
   db = newDb;
   await waitFor(() => rootText(fixture)?.includes('Tudo em dia') === true);
   expect(rootText(fixture)).toContain('Tudo em dia');
+});
+
+it('TU-83 — não renderiza o indicador de sincronização durante a sessão', async () => {
+  const { db: newDb, fixture } = await setupStudyPage(true);
+  db = newDb;
+  await waitFor(() => rootText(fixture)?.includes('Pergunta') === true);
+  expect(exists(fixture, 'app-sync-indicator')).toBe(false);
 });

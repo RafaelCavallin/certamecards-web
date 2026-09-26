@@ -5,7 +5,8 @@ import type { Card } from '../api/card.model';
 import type { Deck } from '../api/deck.model';
 import { AuthStore } from '../auth/auth-store';
 import { toCardRow } from '../db/card-row';
-import { LocalDb } from '../db/local-db';
+import { AccountDb } from '../db/account-db';
+import { CurrentAccountDb } from '../db/current-account-db';
 import { EventsService } from '../events/events-service';
 import { StudySessionStore } from './study-session-store';
 
@@ -28,14 +29,15 @@ export function aState(cardId: string): CardState {
     reviewCount: 3, suspended: false, contentUpdateNote: null, contentUpdatedAt: null, changeSeq: 1,
   };
 }
-export async function setupStudySessionStore(): Promise<{ db: LocalDb; store: StudySessionStore }> {
+export async function setupStudySessionStore(): Promise<{ db: AccountDb; store: StudySessionStore }> {
   TestBed.configureTestingModule({
     providers: [
       { provide: AuthStore, useValue: { user: () => null } },
       { provide: EventsService, useValue: { record: (): Promise<void> => Promise.resolve() } },
     ],
   });
-  const db = TestBed.inject(LocalDb);
+  const db = new AccountDb('study-session-store-test');
+  TestBed.inject(CurrentAccountDb).set({ db, userId: 'study-session-store-test' });
   await db.decks.add(aDeck());
   await db.cards.bulkAdd([toCardRow(aCard('c1')), toCardRow(aCard('c2'))]);
   await db.cardStates.bulkAdd([aState('c1'), aState('c2')]);

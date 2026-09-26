@@ -12,7 +12,8 @@ import { DecksData } from '../../../core/data/decks-data';
 import { SettingsData } from '../../../core/data/settings-data';
 import { SubjectsData } from '../../../core/data/subjects-data';
 import { SuggestionsService } from '../../../core/library/suggestions-service';
-import { SyncService } from '../../../core/sync/sync-service';
+import { SyncCycleCoordinator } from '../../../core/sync/sync-cycle-coordinator';
+import { SyncStatusStore } from '../../../core/sync/sync-status-store';
 import { DashboardPage } from './dashboard-page';
 
 export function aDeck(overrides: Partial<Deck> = {}): Deck {
@@ -50,7 +51,10 @@ export function setupDashboard(
   const navigate = vi.fn().mockResolvedValue(true);
   TestBed.configureTestingModule({
     providers: [
-      { provide: AuthStore, useValue: { user: () => options.user ?? aUser('Ana Souza') } },
+      {
+        provide: AuthStore,
+        useValue: { user: () => options.user ?? aUser('Ana Souza'), isAuthenticated: () => true },
+      },
       { provide: DecksData, useValue: { active: () => options.decks ?? [] } },
       { provide: CardsData, useValue: { allActive: () => options.cards ?? [] } },
       { provide: CardStatesData, useValue: { byCardId: () => new Map() } },
@@ -58,7 +62,8 @@ export function setupDashboard(
       { provide: SubjectsData, useValue: { active: () => options.subjects ?? [], all: () => options.subjects ?? [] } },
       { provide: Router, useValue: { navigate } },
       { provide: SuggestionsService, useValue: { load: () => Promise.resolve([]) } },
-      { provide: SyncService, useValue: { status: () => 'synced', pendingCount: () => 0, flush: () => Promise.resolve() } },
+      { provide: SyncStatusStore, useValue: { status: () => 'synced', pendingCount: () => 0 } },
+      { provide: SyncCycleCoordinator, useValue: { requestSync: () => undefined, runNow: () => Promise.resolve() } },
       { provide: LocalDb, useValue: { clearAllLocalData: () => Promise.resolve() } },
     ],
   });

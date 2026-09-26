@@ -1,4 +1,4 @@
-import { Component, effect, inject, viewChild } from '@angular/core';
+import { Component, computed, effect, inject, viewChild } from '@angular/core';
 import type { ElementRef } from '@angular/core';
 import { SignOutFlow } from '../../../core/auth/sign-out-flow';
 import { Button } from '../../../shared/ui/button/button';
@@ -11,7 +11,11 @@ import { Button } from '../../../shared/ui/button/button';
 export class SignOutButton {
   private readonly signOutFlow = inject(SignOutFlow);
   private readonly dialogRef = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
-  protected readonly confirmationOpen = this.signOutFlow.confirmationOpen;
+  protected readonly dialogState = this.signOutFlow.dialog;
+  protected readonly pendingCount = this.signOutFlow.pendingCount;
+  protected readonly online = this.signOutFlow.online;
+  protected readonly logoutFailed = this.signOutFlow.logoutFailed;
+  protected readonly dialogOpen = computed(() => this.dialogState() !== 'closed');
 
   constructor() {
     effect(() => this.syncOpenState());
@@ -21,24 +25,32 @@ export class SignOutButton {
     this.signOutFlow.requestSignOut();
   }
 
-  protected onCancel(): void {
-    this.signOutFlow.cancel();
+  protected onStay(): void {
+    this.signOutFlow.stay();
   }
 
-  protected onWait(): void {
-    void this.signOutFlow.confirmWait();
+  protected onSyncAndSignOut(): void {
+    void this.signOutFlow.syncAndSignOut();
   }
 
-  protected onLeaveAnyway(): void {
-    void this.signOutFlow.confirmLeaveAnyway();
+  protected onRequestDiscard(): void {
+    this.signOutFlow.requestDiscard();
+  }
+
+  protected onBackToChoice(): void {
+    this.signOutFlow.backToChoice();
+  }
+
+  protected onConfirmDiscard(): void {
+    void this.signOutFlow.confirmDiscard();
   }
 
   private syncOpenState(): void {
     const dialog = this.dialogRef().nativeElement;
-    if (this.confirmationOpen() && !dialog.open) {
+    if (this.dialogOpen() && !dialog.open) {
       dialog.showModal();
     }
-    if (!this.confirmationOpen() && dialog.open) {
+    if (!this.dialogOpen() && dialog.open) {
       dialog.close();
     }
   }

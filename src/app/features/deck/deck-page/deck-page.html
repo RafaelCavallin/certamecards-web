@@ -31,7 +31,6 @@
     <app-deck-form
       [subjects]="subjectsData.active()"
       [initial]="{ subjectId: currentDeck.subjectId, name: currentDeck.name, description: currentDeck.description ?? '' }"
-      [online]="connectivity.online()"
       submitLabel="Salvar"
       (saved)="onSaveDeckEdit($event)"
     />

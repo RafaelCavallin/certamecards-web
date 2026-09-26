@@ -4,12 +4,13 @@ import type { Card } from '../api/card.model';
 import type { Deck } from '../api/deck.model';
 import { LibraryApi } from '../api/library-api';
 import type { DeckContentPage } from '../api/library.model';
-import { LocalDb } from '../db/local-db';
+import { AccountDb } from '../db/account-db';
+import { CurrentAccountDb } from '../db/current-account-db';
 import { EventsService } from '../events/events-service';
-import { SyncService } from '../sync/sync-service';
+import { SyncCycleCoordinator } from '../sync/sync-cycle-coordinator';
 import { SubscriptionService } from './subscription-service';
 
-let db: LocalDb;
+let db: AccountDb;
 
 const DECK = {
   id: 'd1', subjectId: 's1', name: 'CF/88', description: null, origin: 'official_subscription', originRef: null,
@@ -27,13 +28,20 @@ function aCard(id: string): Card {
 function contentPage(overrides: Partial<DeckContentPage>): DeckContentPage {
   return { cards: [], cardStates: [], nextAfter: null, hasMore: false, ...overrides };
 }
-function setup(api: Partial<Record<keyof LibraryApi, ReturnType<typeof vi.fn>>>): { service: SubscriptionService; pull: ReturnType<typeof vi.fn> } {
-  const pull = vi.fn().mockResolvedValue(undefined);
+function setup(
+  api: Partial<Record<keyof LibraryApi, ReturnType<typeof vi.fn>>>,
+): { service: SubscriptionService; runNow: ReturnType<typeof vi.fn> } {
+  const runNow = vi.fn().mockResolvedValue(undefined);
   TestBed.configureTestingModule({
-    providers: [{ provide: LibraryApi, useValue: api }, { provide: SyncService, useValue: { pull } }, { provide: EventsService, useValue: { record: vi.fn() } }],
+    providers: [
+      { provide: LibraryApi, useValue: api },
+      { provide: SyncCycleCoordinator, useValue: { runNow } },
+      { provide: EventsService, useValue: { record: vi.fn() } },
+    ],
   });
-  db = TestBed.inject(LocalDb);
-  return { service: TestBed.inject(SubscriptionService), pull };
+  db = new AccountDb('subscription-service-failure-test');
+  TestBed.inject(CurrentAccountDb).set({ db, userId: 'subscription-service-failure-test' });
+  return { service: TestBed.inject(SubscriptionService), runNow };
 }
 
 afterEach(async () => {
@@ -45,12 +53,12 @@ it('TI-53 — falha no meio do snapshot não deixa deck nem cartões gravados', 
     .mockResolvedValueOnce(contentPage({ cards: [aCard('c1')], nextAfter: 'c1', hasMore: true }))
     .mockRejectedValueOnce(new Error('queda de rede'));
   const subscribe = vi.fn().mockResolvedValue({ deck: DECK, subscription: SUBSCRIPTION, restoredProgress: false });
-  const { service, pull } = setup({ subscribe, content });
+  const { service, runNow } = setup({ subscribe, content });
   await expect(service.subscribe('d1')).rejects.toThrow('queda de rede');
   expect(await db.decks.count()).toBe(0);
   expect(await db.cards.count()).toBe(0);
-  expect(await db.outbox.count()).toBe(0);
-  expect(pull).not.toHaveBeenCalled();
+  expect(await db.syncOperations.count()).toBe(0);
+  expect(runNow).not.toHaveBeenCalled();
 });
 
 it('TI-53 — falha ao gravar no Dexie desfaz a transação inteira', async () => {

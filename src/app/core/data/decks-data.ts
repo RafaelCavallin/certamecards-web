@@ -1,60 +1,53 @@
-import { Injectable, Injector, inject, runInInjectionContext } from '@angular/core';
+import { Injectable, Injector, inject } from '@angular/core';
 import type { Signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { liveQuery } from 'dexie';
-import { from } from 'rxjs';
 import type { CreateDeckRequest, Deck, UpdateDeckRequest } from '../api/deck.model';
-import { DecksApi } from '../api/decks-api';
-import { LocalDb } from '../db/local-db';
+import { CurrentAccountDb } from '../db/current-account-db';
+import type { CurrentAccount } from '../db/current-account-db';
 import { EventsService } from '../events/events-service';
-import { SyncService } from '../sync/sync-service';
+import { DeckMutationWriter } from '../sync/deck-mutation-writer';
+import { DeckResetWriter } from '../sync/deck-reset-writer';
+import { accountLiveSignal } from './account-live-query';
 
 @Injectable({ providedIn: 'root' })
 export class DecksData {
-  private readonly localDb = inject(LocalDb);
-  private readonly decksApi = inject(DecksApi);
-  private readonly syncService = inject(SyncService);
+  private readonly currentAccountDb = inject(CurrentAccountDb);
+  private readonly deckWriter = inject(DeckMutationWriter);
+  private readonly deckResetWriter = inject(DeckResetWriter);
   private readonly eventsService = inject(EventsService);
   private readonly injector = inject(Injector);
 
-  readonly active: Signal<readonly Deck[]> = toSignal(from(liveQuery(() => this.fetchActive())), {
-    initialValue: [],
+  readonly active: Signal<readonly Deck[]> = accountLiveSignal(this.injector, this.currentAccountDb, {
+    query: (account) => this.fetchActive(account), initialValue: [],
   });
 
   watchById(id: string): Signal<Deck | undefined> {
-    return runInInjectionContext(this.injector, () =>
-      toSignal(from(liveQuery(() => this.localDb.decks.get(id))), { initialValue: undefined }),
-    );
+    return accountLiveSignal(this.injector, this.currentAccountDb, {
+      query: (account) => account.db.decks.get(id), initialValue: undefined,
+    });
   }
 
   async create(request: CreateDeckRequest): Promise<Deck> {
-    const deck = await this.decksApi.create(request);
-    await this.localDb.decks.put(deck);
-    void this.syncService.pull();
+    const deck = await this.deckWriter.execute({
+      kind: 'deck_create', deckId: request.id, subjectId: request.subjectId, name: request.name, description: request.description,
+    });
     void this.eventsService.record('deck_created', { deckId: deck.id });
     return deck;
   }
 
-  async update(id: string, ifMatch: number, request: UpdateDeckRequest): Promise<Deck> {
-    const deck = await this.decksApi.update(id, ifMatch, request);
-    await this.localDb.decks.put(deck);
-    void this.syncService.pull();
-    return deck;
+  update(id: string, request: UpdateDeckRequest): Promise<Deck> {
+    return this.deckWriter.execute({ kind: 'deck_update', deckId: id, changes: request });
   }
 
-  async delete(id: string, ifMatch: number): Promise<void> {
-    await this.decksApi.delete(id, ifMatch);
-    await this.localDb.decks.delete(id);
-    void this.syncService.pull();
+  async delete(id: string): Promise<void> {
+    await this.deckWriter.execute({ kind: 'deck_delete', deckId: id });
   }
 
   async resetProgress(id: string): Promise<void> {
-    await this.decksApi.resetProgress(id);
-    await this.syncService.pull();
+    await this.deckResetWriter.execute({ kind: 'deck_reset', deckId: id });
   }
 
-  private async fetchActive(): Promise<Deck[]> {
-    const all = await this.localDb.decks.toArray();
+  private async fetchActive(account: CurrentAccount): Promise<Deck[]> {
+    const all = await account.db.decks.toArray();
     return all.filter((deck) => deck.deletedAt === null);
   }
 }

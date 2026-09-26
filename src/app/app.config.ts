@@ -7,22 +7,25 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth-interceptor';
 import { AuthStore } from './core/auth/auth-store';
 import { connectivityInterceptor } from './core/connectivity/connectivity-interceptor';
+import { AppDatabaseBootstrap } from './core/db/app-database-bootstrap';
 import { LocalDb } from './core/db/local-db';
 import { GlobalErrorHandler } from './core/events/global-error-handler';
 import { ParamAwareReuseStrategy } from './core/navigation/param-aware-reuse-strategy';
 import { InstallTracker } from './core/pwa/install-tracker';
 import { requestPersistentStorage } from './core/pwa/persistent-storage';
 import { ServiceWorkerUpdates } from './core/pwa/service-worker-updates';
-import { SyncService } from './core/sync/sync-service';
+import { SyncCycleCoordinator } from './core/sync/sync-cycle-coordinator';
 import { ThemeService } from './core/theme/theme-service';
 
 async function initializeApp(): Promise<void> {
+  const databaseBootstrap = inject(AppDatabaseBootstrap);
   const authStore = inject(AuthStore);
   const localDb = inject(LocalDb);
-  inject(SyncService);
+  inject(SyncCycleCoordinator);
   inject(ThemeService);
   inject(ServiceWorkerUpdates).listen();
   inject(InstallTracker).listen();
+  await databaseBootstrap.run();
   await Promise.all([authStore.initialize(), localDb.getOrCreateDeviceId(), requestPersistentStorage()]);
 }
 export const appConfig: ApplicationConfig = {

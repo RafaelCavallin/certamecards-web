@@ -1,0 +1,14 @@
+@if (open()) {
+  <section class="space-y-4 border-t border-line pt-4" aria-label="Restaurar versão guardada">
+    <h2 class="font-sans text-lg font-semibold text-ink">Restaurar versão</h2>
+    @if (isOrphanCard()) {
+      <label class="grid gap-2 text-sm text-ink" for="restore-deck">Deck de destino
+        <select id="restore-deck" class="min-h-11 rounded-md border border-line bg-surface px-3 text-ink" [(ngModel)]="targetDeckId">
+          <option value="">Escolha um deck próprio</option>
+          @for (deck of options(); track deck.id) { <option [value]="deck.id">{{ deck.name }}</option> }
+        </select>
+      </label>
+    }
+    <div class="flex flex-wrap gap-3"><button appButton variant="primary" type="button" [disabled]="busy() || (isOrphanCard() && !targetDeckId)" (click)="confirm()">Restaurar localmente</button><button appButton type="button" [disabled]="busy()" (click)="closed.emit()">Cancelar</button></div>
+  </section>
+}
